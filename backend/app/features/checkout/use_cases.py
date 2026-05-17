@@ -1,7 +1,11 @@
+import logging
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import CART_EMPTY, RESOURCE_NOT_FOUND, AppHTTPException
+from app.core.metrics import track_checkout, track_checkout_duration
+from app.core.sli_checks import validate_order_persistence
 from app.features.cart.models import CartItem
 from app.features.cart.repositories import ensure_cart_exists
 from app.features.checkout.payment import process_payment
@@ -9,6 +13,7 @@ from app.features.orders.models import OrderItem
 from app.features.orders.repositories import create_order_from_cart, get_orders_by_user_id, get_order_by_id
 from app.features.orders.schemas import OrderRead, OrderItemRead, OrderListRead
 
+logger = logging.getLogger(__name__)
 
 DEFAULT_UNIT_PRICE = 19.99
 
@@ -23,11 +28,14 @@ async def _get_order_items(db: AsyncSession, order_id: int) -> list[OrderItem]:
     return list(result.scalars().all())
 
 
+@track_checkout_duration
 async def checkout(db: AsyncSession, user_id: int) -> OrderRead:
     cart = await ensure_cart_exists(db, user_id)
     items = await _get_cart_items(db, cart.id)
 
     if not items:
+        logger.warning("Checkout failed: cart empty for user_id=%s", user_id)
+        track_checkout("failure")
         raise CART_EMPTY()
 
     cart_item_tuples = [
@@ -37,6 +45,8 @@ async def checkout(db: AsyncSession, user_id: int) -> OrderRead:
 
     payment_success = process_payment(total)
     if not payment_success:
+        logger.warning("Checkout failed: payment declined for user_id=%s total=%.2f", user_id, total)
+        track_checkout("failure")
         raise AppHTTPException(
             status_code=402,
             detail="Payment failed",
@@ -56,6 +66,11 @@ async def checkout(db: AsyncSession, user_id: int) -> OrderRead:
     await db.commit()
 
     order_items = await _get_order_items(db, order_id)
+
+    await validate_order_persistence(db, order_id, user_id)
+
+    logger.info("Checkout succeeded: user_id=%s order_id=%s total=%.2f", user_id, order_id, order_total)
+    track_checkout("success")
 
     return OrderRead(
         id=order_id,

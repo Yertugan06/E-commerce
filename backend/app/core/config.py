@@ -9,5 +9,8 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    SLI_ENABLED: bool = True
+    SLI_DEBUG_LOGGING: bool = False
+
 
 settings = Settings()

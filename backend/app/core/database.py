@@ -1,5 +1,6 @@
 from collections.abc import AsyncGenerator
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlmodel import SQLModel
 
@@ -16,3 +17,11 @@ async def create_db_and_tables():
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSession(engine) as session:
         yield session
+
+
+async def get_active_connection_count() -> int:
+    async with AsyncSession(engine) as session:
+        result = await session.execute(
+            text("SELECT count(*) FROM pg_stat_activity WHERE state = 'active' AND datname = current_database()")
+        )
+        return result.scalar() or 0

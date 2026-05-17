@@ -40,3 +40,4 @@ terraform/terraform.tfstate*
 terraform/terraform.tfvars
 
 .kilo
+.pytest_cache
