@@ -6,6 +6,7 @@ import { Register } from './pages/Register';
 import { Products } from './pages/Products';
 import { Cart } from './pages/Cart';
 import { Layout } from './shared/ui/Layout';
+import { ProtectedRoute } from './features/auth/ProtectedRoute';
 
 function App() {
   return (
@@ -15,8 +16,10 @@ function App() {
           <Route index element={<Home />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
-          <Route path="products" element={<Products />} />
-          <Route path="cart" element={<Cart />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="products" element={<Products />} />
+            <Route path="cart" element={<Cart />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

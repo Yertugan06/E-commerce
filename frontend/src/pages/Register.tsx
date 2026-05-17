@@ -1,3 +1,5 @@
+import { RegisterForm } from '../features/auth/RegisterForm';
+
 export function Register() {
-  return <div>Register Page</div>;
+  return <RegisterForm />;
 }
