@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlmodel import Field, SQLModel
 
@@ -13,6 +13,6 @@ class User(SQLModel, table=True):
     hashed_password: str = Field(nullable=False)
     role: UserRole = Field(default=UserRole.CUSTOMER, nullable=False)
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=datetime.utcnow,
         nullable=False,
     )

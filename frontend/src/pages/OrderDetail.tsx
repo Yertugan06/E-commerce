@@ -27,9 +27,9 @@ export function OrderDetail() {
   useEffect(() => {
     if (!orderId) return;
     setLoading(true);
-    fetchOrder(Number(orderId))
-      .then(setOrder)
-      .catch((err) => setError(err.response?.data?.detail || 'Failed to load order'))
+    fetchOrder(Number(orderId)).then((data: any) => {
+      setOrder(data as Order);
+    }).catch((err) => setError(err.response?.data?.detail || 'Failed to load order'))
       .finally(() => setLoading(false));
   }, [orderId, fetchOrder]);
 

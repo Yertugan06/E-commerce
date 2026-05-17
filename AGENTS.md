@@ -33,7 +33,7 @@ We use specific tools and environment isolation. Always default to these command
 Do not guess schema layouts or complex validation rules. Read these specific files *only* if your current task explicitly requires modifying these subsystems:
 
 - [ ] Database Schema & ERD details: See `docs/agent/database_schema.md`
-- [ ] Authentication & JWT implementation details: See `docs/agent/auth_flow.md`
+- Authentication & JWT implementation details: See `docs/agent/auth_flow.md`
 - [ ] Checkout Transaction & Stock Locking state rules: See `docs/agent/checkout_state.md`
 - [ ] Frontend State Management (Zustand) patterns: See `docs/agent/frontend_state.md`
 

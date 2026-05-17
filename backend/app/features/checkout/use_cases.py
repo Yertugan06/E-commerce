@@ -1,30 +1,44 @@
-from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.features.cart.repositories import ensure_cart_exists, remove_cart_item
+from app.core.exceptions import CART_EMPTY, RESOURCE_NOT_FOUND
+from app.features.cart.models import CartItem
+from app.features.cart.repositories import ensure_cart_exists
 from app.features.checkout.payment import process_payment
+from app.features.orders.models import OrderItem
 from app.features.orders.repositories import create_order_from_cart, get_orders_by_user_id, get_order_by_id
 from app.features.orders.schemas import OrderRead, OrderItemRead, OrderListRead
 
 
+async def _get_cart_items(db: AsyncSession, cart_id: int) -> list[CartItem]:
+    result = await db.execute(select(CartItem).where(CartItem.cart_id == cart_id))
+    return list(result.scalars().all())
+
+
+async def _get_order_items(db: AsyncSession, order_id: int) -> list[OrderItem]:
+    result = await db.execute(select(OrderItem).where(OrderItem.order_id == order_id))
+    return list(result.scalars().all())
+
+
 async def checkout(db: AsyncSession, user_id: int) -> OrderRead:
     cart = await ensure_cart_exists(db, user_id)
-    if not cart.items:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cart is empty",
-        )
+    items = await _get_cart_items(db, cart.id)
 
-    cart_items = [(item.product_id, item.quantity) for item in cart.items]
+    if not items:
+        raise CART_EMPTY()
+
+    cart_item_tuples = [(item.product_id, item.quantity) for item in items]
     total = 0.0
 
     process_payment(total)
 
-    order = await create_order_from_cart(db, user_id, cart_items)
+    order = await create_order_from_cart(db, user_id, cart_item_tuples)
 
-    for item in list(cart.items):
+    for item in items:
         await db.delete(item)
     await db.commit()
+
+    order_items = await _get_order_items(db, order.id)
 
     return OrderRead(
         id=order.id,
@@ -40,7 +54,7 @@ async def checkout(db: AsyncSession, user_id: int) -> OrderRead:
                 quantity=oi.quantity,
                 unit_price=oi.unit_price,
             )
-            for oi in order.items
+            for oi in order_items
         ],
     )
 
@@ -62,7 +76,9 @@ async def get_user_orders(db: AsyncSession, user_id: int) -> list[OrderListRead]
 async def get_order_detail(db: AsyncSession, user_id: int, order_id: int) -> OrderRead:
     order = await get_order_by_id(db, order_id, user_id)
     if order is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+        raise RESOURCE_NOT_FOUND("Order not found")
+
+    order_items = await _get_order_items(db, order.id)
 
     return OrderRead(
         id=order.id,
@@ -78,6 +94,6 @@ async def get_order_detail(db: AsyncSession, user_id: int, order_id: int) -> Ord
                 quantity=oi.quantity,
                 unit_price=oi.unit_price,
             )
-            for oi in order.items
+            for oi in order_items
         ],
     )

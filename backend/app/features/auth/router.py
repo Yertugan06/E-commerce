@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from app.core.dependencies import DBSessionDep, get_current_user
+from app.core.dependencies import DBSessionDep, CurrentUserDep
 from app.features.auth.schemas import RegisterRequest, LoginRequest, TokenResponse
 from app.features.auth.use_cases import register_user, login_user
 from app.features.users.schemas import UserRead
@@ -19,5 +19,5 @@ async def login(body: LoginRequest, db: DBSessionDep):
 
 
 @router.get("/me", response_model=UserRead)
-async def me(current_user: UserRead | None = Depends(get_current_user)):
+async def me(current_user: CurrentUserDep):
     return current_user

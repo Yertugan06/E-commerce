@@ -1,6 +1,5 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.features.orders.models import Order, OrderItem
 
@@ -22,11 +21,7 @@ async def create_order_from_cart(
         db.add(item)
 
     await db.commit()
-    await db.refresh(order)
-    result = await db.execute(
-        select(Order).where(Order.id == order.id).options(selectinload(Order.items))
-    )
-    return result.scalar_one()
+    return order
 
 
 async def get_orders_by_user_id(db: AsyncSession, user_id: int) -> list[Order]:
@@ -38,8 +33,6 @@ async def get_orders_by_user_id(db: AsyncSession, user_id: int) -> list[Order]:
 
 async def get_order_by_id(db: AsyncSession, order_id: int, user_id: int) -> Order | None:
     result = await db.execute(
-        select(Order)
-        .where(Order.id == order_id, Order.user_id == user_id)
-        .options(selectinload(Order.items))
+        select(Order).where(Order.id == order_id, Order.user_id == user_id)
     )
     return result.scalar_one_or_none()

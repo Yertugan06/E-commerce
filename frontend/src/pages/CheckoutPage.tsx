@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCartStore } from '../../entities/cart/store';
-import { useOrdersStore } from '../../entities/orders/store';
+import { useCartStore } from '../entities/cart/store';
+import { useOrdersStore } from '../entities/orders/store';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
