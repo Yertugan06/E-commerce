@@ -4,7 +4,9 @@ from fastapi import FastAPI
 
 from app.core.database import create_db_and_tables
 from app.features.auth.router import router as auth_router
+from app.features.cart.router import router as cart_router
 from app.features.users.models import User
+from app.features.cart.models import Cart, CartItem
 
 
 @asynccontextmanager
@@ -18,6 +20,7 @@ async def lifespan(application: FastAPI):
 
 app = FastAPI(title="E-Commerce MVP", version="0.1.0", lifespan=lifespan)
 app.include_router(auth_router)
+app.include_router(cart_router)
 
 
 @app.get("/")

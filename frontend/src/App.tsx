@@ -4,7 +4,7 @@ import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Products } from './pages/Products';
-import { Cart } from './pages/Cart';
+import { CartPage } from './pages/CartPage';
 import { Layout } from './shared/ui/Layout';
 import { ProtectedRoute } from './features/auth/ProtectedRoute';
 
@@ -18,7 +18,7 @@ function App() {
           <Route path="register" element={<Register />} />
           <Route element={<ProtectedRoute />}>
             <Route path="products" element={<Products />} />
-            <Route path="cart" element={<Cart />} />
+            <Route path="cart" element={<CartPage />} />
           </Route>
         </Route>
       </Routes>
