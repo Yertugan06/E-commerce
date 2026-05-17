@@ -95,6 +95,66 @@ bun run dev
 - `docs/agent/checkout_state.md` — Checkout flow, order status lifecycle, stock locking
 - `docs/agent/frontend_state.md` — Zustand stores, API client, data flow patterns
 
+## CI/CD
+
+### Overview
+
+| Pipeline | Trigger | Runner | Action |
+|---|---|---|---|
+| **CI** | Push/PR → main | GitHub-hosted | Test, lint, build & push Docker images to GHCR |
+| **Deploy** | CI success on main | Self-hosted (`laptop`) | Pull latest images, `terraform apply` |
+| **Terraform Plan** | PR touching `terraform/` | GitHub-hosted | `terraform plan` as PR comment |
+
+### Workflows
+
+- **`.github/workflows/ci.yml`** — Backend tests (PostgreSQL service container), frontend tests + lint, Docker build & push to GHCR.
+- **`.github/workflows/deploy.yml`** — Pulls `:latest` images from GHCR and runs `terraform apply` via the self-hosted runner.
+- **`.github/workflows/terraform-plan.yml`** — Validates and plans Terraform changes on PRs.
+
+### Self-hosted Runner Setup (Laptop)
+
+1. Go to repo **Settings → Actions → Runners → New self-hosted runner**
+2. Follow the OS-specific download and configure steps
+3. When prompted for labels, enter: `laptop`
+4. Start the runner service
+
+### Required Secrets
+
+| Secret | Purpose |
+|---|---|
+| `TFE_TOKEN` | HCP Terraform API token — used by both the GitHub-hosted runner (`terraform-plan.yml`) and the self-hosted runner (`deploy.yml`) to authenticate with the remote state backend |
+
+### Self-hosted Runner Security
+
+Deploy is only triggered on `push` to `main` (via `workflow_run` on CI). It will **not** trigger on PRs from forks, preventing untrusted code from reaching the self-hosted runner.
+
+### Terraform Remote State
+
+Terraform state is stored remotely in [HCP Terraform](https://app.terraform.io) under the organization **my-ecommerce-org** in the **ecommerce-production** workspace. This provides:
+
+- **State locking** — prevents concurrent modifications
+- **Run history** — full audit trail of all infrastructure changes
+- **Remote execution** — plans and applies can run in HCP's infrastructure
+
+To set up local access:
+
+```bash
+# Interactive (recommended)
+cd terraform
+terraform login
+
+# Headless
+export TFE_TOKEN="<your-hcp-api-token>"
+terraform -chdir=terraform init   # migrates local state to HCP
+```
+
+### Manual Deploy (Fallback)
+
+```bash
+# Requires Docker, Terraform, and HCP Terraform token locally
+GITHUB_REPOSITORY_OWNER=myuser TFE_TOKEN=$(cat ~/.terraform.d/credentials.tfrc.json | jq -r '.credentials."app.terraform.io".token') ./scripts/deploy.sh
+```
+
 ## Environment Variables
 
 | Variable | Default | Service | Description |
