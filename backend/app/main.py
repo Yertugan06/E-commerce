@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.database import create_db_and_tables
 from app.core.error_handlers import (
@@ -28,6 +29,14 @@ async def lifespan(application: FastAPI):
 
 
 app = FastAPI(title="E-Commerce MVP", version="0.1.0", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.add_exception_handler(HTTPException, app_http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
