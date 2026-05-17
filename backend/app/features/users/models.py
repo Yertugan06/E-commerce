@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, String
 
 from app.features.users.domain import UserRole
 
@@ -11,8 +11,8 @@ class User(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     email: str = Field(unique=True, index=True, nullable=False)
     hashed_password: str = Field(nullable=False)
-    role: UserRole = Field(default=UserRole.CUSTOMER, nullable=False)
+    role: UserRole = Field(default=UserRole.CUSTOMER, nullable=False, sa_type=String)
     created_at: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=lambda: datetime.now(timezone.utc),
         nullable=False,
     )

@@ -14,6 +14,7 @@ async def ensure_cart_exists(db: AsyncSession, user_id: int) -> Cart:
         db.add(cart)
         await db.commit()
         await db.refresh(cart)
+        assert cart.id is not None, "Cart ID was not assigned after refresh"
     return cart
 
 

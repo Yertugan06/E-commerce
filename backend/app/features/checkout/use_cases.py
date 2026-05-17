@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import CART_EMPTY, RESOURCE_NOT_FOUND
+from app.core.exceptions import CART_EMPTY, RESOURCE_NOT_FOUND, AppHTTPException
 from app.features.cart.models import CartItem
 from app.features.cart.repositories import ensure_cart_exists
 from app.features.checkout.payment import process_payment
@@ -35,7 +35,13 @@ async def checkout(db: AsyncSession, user_id: int) -> OrderRead:
     ]
     total = sum(qty * DEFAULT_UNIT_PRICE for _, qty, price in cart_item_tuples)
 
-    process_payment(total)
+    payment_success = process_payment(total)
+    if not payment_success:
+        raise AppHTTPException(
+            status_code=402,
+            detail="Payment failed",
+            error_code="PAYMENT_FAILED",
+        )
 
     order = await create_order_from_cart(db, user_id, cart_item_tuples, total)
 

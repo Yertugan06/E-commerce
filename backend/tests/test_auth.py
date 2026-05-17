@@ -1,6 +1,8 @@
 import pytest
 from httpx import AsyncClient
 
+pytestmark = pytest.mark.asyncio
+
 
 class TestAuthRegister:
     async def test_register_success(self, client: AsyncClient):

@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship, SQLModel, String
 
 from app.features.orders.domain import OrderStatus
 
@@ -10,10 +10,10 @@ class Order(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(nullable=False, foreign_key="users.id")
-    status: OrderStatus = Field(default=OrderStatus.PENDING, nullable=False)
+    status: OrderStatus = Field(default=OrderStatus.PENDING, nullable=False, sa_type=String)
     total_amount: float = Field(default=0.0, nullable=False)
     created_at: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
 

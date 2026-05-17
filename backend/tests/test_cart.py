@@ -1,6 +1,8 @@
 import pytest
 from httpx import AsyncClient
 
+pytestmark = pytest.mark.asyncio
+
 
 class TestCart:
     async def test_get_empty_cart(self, client: AsyncClient, auth_headers: dict):

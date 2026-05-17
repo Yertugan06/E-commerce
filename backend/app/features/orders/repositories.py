@@ -9,7 +9,8 @@ async def create_order_from_cart(
 ) -> Order:
     order = Order(user_id=user_id, total_amount=total_amount)
     db.add(order)
-    await db.flush()
+    await db.commit()
+    await db.refresh(order)
 
     for product_id, quantity, unit_price in cart_items:
         item = OrderItem(
@@ -20,7 +21,7 @@ async def create_order_from_cart(
         )
         db.add(item)
 
-    await db.flush()
+    await db.commit()
     return order
 
 

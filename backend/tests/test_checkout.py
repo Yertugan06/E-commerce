@@ -1,8 +1,6 @@
 import pytest
 from httpx import AsyncClient
 
-pytestmark = pytest.mark.asyncio
-
 missing_greenlet = pytest.mark.xfail(
     strict=False,
     reason="Known Windows+asyncpg greenlet issue with SQLModel relationships in test env",

@@ -33,11 +33,15 @@ async def seed():
         )
         db.add_all([admin, alice, bob])
         await db.flush()
+        await db.refresh(alice)
+        await db.refresh(bob)
 
         alice_cart = Cart(user_id=alice.id)
         bob_cart = Cart(user_id=bob.id)
         db.add_all([alice_cart, bob_cart])
         await db.flush()
+        await db.refresh(alice_cart)
+        await db.refresh(bob_cart)
 
         db.add_all([
             CartItem(cart_id=alice_cart.id, product_id=101, quantity=2),
@@ -48,6 +52,7 @@ async def seed():
         order = Order(user_id=alice.id, total_amount=49.99)
         db.add(order)
         await db.flush()
+        await db.refresh(order)
 
         db.add_all([
             OrderItem(order_id=order.id, product_id=101, quantity=1, unit_price=19.99),

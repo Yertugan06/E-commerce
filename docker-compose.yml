@@ -36,6 +36,9 @@ services:
     ports:
       - "5173:5173"
     environment:
+      # NOTE: Vite bakes env vars at build time (VITE_ prefix). This only works
+      # with the dev server (CMD bun run dev). For production builds, use
+      # --build-arg or a .env.production file instead.
       VITE_API_URL: http://localhost:8000
     depends_on:
       - backend

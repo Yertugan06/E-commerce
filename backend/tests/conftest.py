@@ -10,14 +10,12 @@ from app.main import app
 test_engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,
-    pool_size=2,
-    max_overflow=0,
+    poolclass=NullPool,
 )
 
 
 @pytest.fixture(autouse=True)
 async def setup_database():
-    await test_engine.dispose()
     async with test_engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
         await conn.run_sync(SQLModel.metadata.create_all)

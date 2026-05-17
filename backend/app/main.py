@@ -1,13 +1,15 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
+logger = logging.getLogger(__name__)
+
 from app.core.database import create_db_and_tables
 from app.core.error_handlers import (
     app_http_exception_handler,
-    http_exception_handler,
     validation_exception_handler,
     generic_exception_handler,
 )
@@ -24,7 +26,7 @@ async def lifespan(application: FastAPI):
     try:
         await create_db_and_tables()
     except Exception:
-        pass
+        logger.exception("Failed to create database tables during startup")
     yield
 
 
