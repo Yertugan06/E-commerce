@@ -22,6 +22,7 @@ async def create_order_from_cart(
         db.add(item)
 
     await db.commit()
+    await db.refresh(order)
     return order
 
 

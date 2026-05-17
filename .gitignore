@@ -34,4 +34,9 @@ docker-data/
 # Logs
 *.log
 
+# Terraform
+terraform/.terraform/
+terraform/terraform.tfstate*
+terraform/terraform.tfvars
+
 .kilo

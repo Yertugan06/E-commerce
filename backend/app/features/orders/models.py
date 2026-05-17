@@ -13,7 +13,7 @@ class Order(SQLModel, table=True):
     status: OrderStatus = Field(default=OrderStatus.PENDING, nullable=False, sa_type=String)
     total_amount: float = Field(default=0.0, nullable=False)
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
         nullable=False,
     )
 
