@@ -20,8 +20,9 @@ export function CheckoutPage() {
     try {
       const order = await checkout();
       navigate(`/checkout/success/${order.id}`);
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.response?.data?.detail || 'Checkout failed');
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: { message?: string; detail?: string } } })?.response?.data;
+      setError(data?.message || data?.detail || 'Checkout failed');
     } finally {
       setLoading(false);
     }

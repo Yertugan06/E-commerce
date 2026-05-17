@@ -38,7 +38,7 @@ describe('LoginForm', () => {
   });
 
   it('shows error on API failure', async () => {
-    (client.post as any).mockRejectedValue({
+    vi.mocked(client.post).mockRejectedValue({
       response: { data: { detail: 'Invalid credentials' } },
     });
 
@@ -52,7 +52,7 @@ describe('LoginForm', () => {
   });
 
   it('calls login on success', async () => {
-    (client.post as any).mockResolvedValue({
+    vi.mocked(client.post).mockResolvedValue({
       data: { access_token: 'token', user: { id: 1, email: 'test@test.com' } },
     });
 

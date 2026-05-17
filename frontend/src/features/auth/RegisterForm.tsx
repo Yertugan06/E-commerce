@@ -22,8 +22,9 @@ export function RegisterForm() {
       const res = await client.post('/auth/register', { email, password });
       login(res.data.access_token, res.data.user);
       navigate('/');
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.response?.data?.detail || 'Registration failed');
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: { message?: string; detail?: string } } })?.response?.data;
+      setError(data?.message || data?.detail || 'Registration failed');
     }
   };
 

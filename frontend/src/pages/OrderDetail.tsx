@@ -26,11 +26,12 @@ export function OrderDetail() {
 
   useEffect(() => {
     if (!orderId) return;
-    setLoading(true);
-    fetchOrder(Number(orderId)).then((data: any) => {
-      setOrder(data as Order);
-    }).catch((err) => setError(err.response?.data?.message || err.response?.data?.detail || 'Failed to load order'))
-      .finally(() => setLoading(false));
+    fetchOrder(Number(orderId)).then((data) => {
+      setOrder(data);
+    }).catch((err: unknown) => {
+      const data = (err as { response?: { data?: { message?: string; detail?: string } } })?.response?.data;
+      setError(data?.message || data?.detail || 'Failed to load order');
+    }).finally(() => setLoading(false));
   }, [orderId, fetchOrder]);
 
   if (loading) return <div>Loading...</div>;
