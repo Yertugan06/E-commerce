@@ -34,7 +34,7 @@ export function LoginForm() {
         <label htmlFor="password">Password</label>
         <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
       </div>
-      <button type="submit">Login</button>
+      <button type="submit" className="btn-primary">Login</button>
     </form>
   );
 }

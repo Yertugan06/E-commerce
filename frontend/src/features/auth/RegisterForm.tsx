@@ -43,7 +43,7 @@ export function RegisterForm() {
         <label>Confirm Password</label>
         <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
       </div>
-      <button type="submit">Register</button>
+      <button type="submit" className="btn-primary">Register</button>
     </form>
   );
 }
