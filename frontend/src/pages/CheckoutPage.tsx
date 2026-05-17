@@ -17,7 +17,7 @@ export function CheckoutPage() {
       const order = await checkout();
       navigate(`/checkout/success/${order.id}`);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Checkout failed');
+      setError(err.response?.data?.message || err.response?.data?.detail || 'Checkout failed');
     } finally {
       setLoading(false);
     }

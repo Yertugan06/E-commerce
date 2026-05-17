@@ -4,9 +4,12 @@ from fastapi.responses import JSONResponse
 
 
 async def app_http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    content = exc.detail if isinstance(exc.detail, dict) else {"message": exc.detail, "error_code": "GENERIC_ERROR"}
+    if "detail" not in content:
+        content["detail"] = content.get("message", "")
     return JSONResponse(
         status_code=exc.status_code,
-        content=exc.detail if isinstance(exc.detail, dict) else {"message": exc.detail, "error_code": "GENERIC_ERROR"},
+        content=content,
     )
 
 

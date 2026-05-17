@@ -18,7 +18,7 @@ export function LoginForm() {
       login(res.data.access_token, res.data.user);
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login failed');
+      setError(err.response?.data?.message || err.response?.data?.detail || 'Login failed');
     }
   };
 

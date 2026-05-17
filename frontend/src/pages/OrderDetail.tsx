@@ -29,7 +29,7 @@ export function OrderDetail() {
     setLoading(true);
     fetchOrder(Number(orderId)).then((data: any) => {
       setOrder(data as Order);
-    }).catch((err) => setError(err.response?.data?.detail || 'Failed to load order'))
+    }).catch((err) => setError(err.response?.data?.message || err.response?.data?.detail || 'Failed to load order'))
       .finally(() => setLoading(false));
   }, [orderId, fetchOrder]);
 

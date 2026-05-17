@@ -10,6 +10,9 @@ from app.features.orders.repositories import create_order_from_cart, get_orders_
 from app.features.orders.schemas import OrderRead, OrderItemRead, OrderListRead
 
 
+DEFAULT_UNIT_PRICE = 19.99
+
+
 async def _get_cart_items(db: AsyncSession, cart_id: int) -> list[CartItem]:
     result = await db.execute(select(CartItem).where(CartItem.cart_id == cart_id))
     return list(result.scalars().all())
@@ -27,25 +30,33 @@ async def checkout(db: AsyncSession, user_id: int) -> OrderRead:
     if not items:
         raise CART_EMPTY()
 
-    cart_item_tuples = [(item.product_id, item.quantity) for item in items]
-    total = 0.0
+    cart_item_tuples = [
+        (item.product_id, item.quantity, DEFAULT_UNIT_PRICE) for item in items
+    ]
+    total = sum(qty * DEFAULT_UNIT_PRICE for _, qty, price in cart_item_tuples)
 
     process_payment(total)
 
-    order = await create_order_from_cart(db, user_id, cart_item_tuples)
+    order = await create_order_from_cart(db, user_id, cart_item_tuples, total)
+
+    order_id = order.id
+    order_user_id = order.user_id
+    order_status = order.status
+    order_total = order.total_amount
+    order_created_at = order.created_at
 
     for item in items:
         await db.delete(item)
     await db.commit()
 
-    order_items = await _get_order_items(db, order.id)
+    order_items = await _get_order_items(db, order_id)
 
     return OrderRead(
-        id=order.id,
-        user_id=order.user_id,
-        status=order.status,
-        total_amount=order.total_amount,
-        created_at=order.created_at,
+        id=order_id,
+        user_id=order_user_id,
+        status=order_status,
+        total_amount=order_total,
+        created_at=order_created_at,
         items=[
             OrderItemRead(
                 id=oi.id,
