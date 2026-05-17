@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.core.database import SQLModel
 from app.features.users.models import User
 from app.features.cart.models import Cart, CartItem
+from app.features.orders.models import Order, OrderItem
 
 config = context.config
 
