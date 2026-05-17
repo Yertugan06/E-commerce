@@ -1,0 +1,49 @@
+groups:
+  - name: sli_recording
+    interval: 15s
+    rules:
+      - record: sli:api_availability:ratio_5m
+        expr: |
+          1 - (
+            rate(http_requests_total{status_group="5xx"}[5m])
+            /
+            rate(http_requests_total[5m])
+          )
+
+      - record: sli:read_latency_p95:5m
+        expr: |
+          histogram_quantile(0.95,
+            rate(http_request_duration_seconds_bucket{method="GET"}[5m])
+          )
+
+      - record: sli:write_latency_p95:5m
+        expr: |
+          histogram_quantile(0.95,
+            rate(http_request_duration_seconds_bucket{method="POST"}[5m])
+          )
+
+      - record: sli:auth_latency_p95:5m
+        expr: |
+          histogram_quantile(0.95,
+            rate(http_request_duration_seconds_bucket{endpoint_group="auth"}[5m])
+          )
+
+      - record: sli:5xx_error_rate:5m
+        expr: |
+          rate(http_requests_total{status_group="5xx"}[5m])
+          /
+          rate(http_requests_total[5m])
+
+      - record: sli:checkout_failure_rate:5m
+        expr: |
+          rate(checkout_total{status="failure"}[5m])
+          /
+          (rate(checkout_total[5m]) > 0)
+
+      - record: sli:order_persistence_errors:5m
+        expr: |
+          rate(order_persistence_validations_total{status="failure"}[5m])
+
+      - record: sli:cart_consistency_errors:5m
+        expr: |
+          rate(cart_consistency_validations_total{status="failure"}[5m])

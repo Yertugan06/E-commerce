@@ -18,6 +18,7 @@ from app.core.middleware import SLIMiddleware
 from app.core.health import health_endpoint
 from app.core.metrics import metrics_endpoint, db_connections_active
 from app.core.database import get_active_connection_count
+from app.core.metrics_aggregator import aggregate_health_dashboard
 from app.core.system_metrics import collect_process_metrics
 from app.features.auth.router import router as auth_router
 from app.features.cart.router import router as cart_router

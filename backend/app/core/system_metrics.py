@@ -5,12 +5,12 @@ from prometheus_client import Gauge
 from app.core.config import settings
 
 process_cpu_seconds_total = Gauge(
-    "process_cpu_seconds_total",
+    "app_process_cpu_seconds_total",
     "Total user and system CPU time spent in seconds",
 )
 
 process_resident_memory_bytes = Gauge(
-    "process_resident_memory_bytes",
+    "app_process_resident_memory_bytes",
     "Resident memory size in bytes",
 )
 

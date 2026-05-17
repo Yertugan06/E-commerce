@@ -11,6 +11,8 @@ env:
   REGISTRY: ghcr.io
   BACKEND_IMAGE_NAME: ecommerce-backend
   FRONTEND_IMAGE_NAME: ecommerce-frontend
+  NGINX_IMAGE_NAME: ecommerce-nginx
+  AUTOSCALER_IMAGE_NAME: ecommerce-autoscaler
   TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
 
 jobs:
@@ -34,13 +36,23 @@ jobs:
       - name: Pull latest frontend image
         run: docker pull ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
 
+      - name: Pull latest nginx image
+        run: docker pull ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.NGINX_IMAGE_NAME }}:latest
+
+      - name: Pull latest autoscaler image
+        run: docker pull ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.AUTOSCALER_IMAGE_NAME }}:latest
+
       - name: Write deploy tfvars
         run: |
           @"
-          backend_image_registry_prefix = "${{ env.REGISTRY }}/${{ github.repository }}/"
-          frontend_image_registry_prefix = "${{ env.REGISTRY }}/${{ github.repository }}/"
-          backend_image_tag = "latest"
-          frontend_image_tag = "latest"
+          backend_image_registry_prefix    = "${{ env.REGISTRY }}/${{ github.repository }}/"
+          frontend_image_registry_prefix   = "${{ env.REGISTRY }}/${{ github.repository }}/"
+          nginx_image_registry_prefix      = "${{ env.REGISTRY }}/${{ github.repository }}/"
+          autoscaler_image_registry_prefix = "${{ env.REGISTRY }}/${{ github.repository }}/"
+          backend_image_tag    = "latest"
+          frontend_image_tag   = "latest"
+          nginx_image_tag      = "latest"
+          autoscaler_image_tag = "latest"
           "@ | Out-File -Encoding UTF8 terraform/deploy.auto.tfvars
 
       - name: Terraform init

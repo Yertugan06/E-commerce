@@ -1,0 +1,103 @@
+groups:
+  - name: sli_alerts
+    interval: 15s
+    rules:
+      - alert: APIAvailabilityLow
+        expr: sli:api_availability:ratio_5m < 0.999
+        for: 5m
+        labels:
+          severity: critical
+          sli: api_availability
+        annotations:
+          summary: "API availability is below 99.9% (currently {{ $value | humanizePercentage }})"
+          description: "The proportion of non-5xx responses over the last 5 minutes has dropped below 99.9%."
+
+      - alert: DatabaseDown
+        expr: db_available == 0
+        for: 1m
+        labels:
+          severity: critical
+          sli: database_availability
+        annotations:
+          summary: "PostgreSQL is unreachable"
+          description: "The database health check has failed for over 1 minute."
+
+      - alert: ReadLatencyHigh
+        expr: sli:read_latency_p95:5m > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          sli: read_latency
+        annotations:
+          summary: "Read latency p95 exceeds 1s (currently {{ $value | humanizeDuration }})"
+          description: "GET endpoint p95 latency has been above 1 second for 5 minutes."
+
+      - alert: WriteLatencyHigh
+        expr: sli:write_latency_p95:5m > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          sli: write_latency
+        annotations:
+          summary: "Write latency p95 exceeds 2s (currently {{ $value | humanizeDuration }})"
+          description: "POST endpoint p95 latency has been above 2 seconds for 5 minutes."
+
+      - alert: AuthLatencyHigh
+        expr: sli:auth_latency_p95:5m > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          sli: auth_latency
+        annotations:
+          summary: "Auth latency p95 exceeds 1s (currently {{ $value | humanizeDuration }})"
+          description: "POST /auth/login p95 latency has been above 1 second for 5 minutes."
+
+      - alert: FiveXXErrorRateHigh
+        expr: sli:5xx_error_rate:5m > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          sli: five_xx_error_rate
+        annotations:
+          summary: "5xx error rate exceeds 1% (currently {{ $value | humanizePercentage }})"
+          description: "The rate of HTTP 5xx responses has been above 1% for 5 minutes."
+
+      - alert: CheckoutFailureRateHigh
+        expr: sli:checkout_failure_rate:5m > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          sli: checkout_failure_rate
+        annotations:
+          summary: "Checkout failure rate exceeds 5% (currently {{ $value | humanizePercentage }})"
+          description: "The proportion of failed checkout requests has been above 5% for 5 minutes."
+
+      - alert: OrderPersistenceFailing
+        expr: sli:order_persistence_errors:5m > 0
+        for: 1m
+        labels:
+          severity: critical
+          sli: order_persistence
+        annotations:
+          summary: "Order read-after-write validation is failing"
+          description: "Orders created via checkout are not immediately readable. Data integrity issue."
+
+      - alert: CartConsistencyFailing
+        expr: sli:cart_consistency_errors:5m > 0
+        for: 1m
+        labels:
+          severity: warning
+          sli: cart_consistency
+        annotations:
+          summary: "Cart consistency validation is failing"
+          description: "Cart state does not reflect the latest mutation within expected time."
+
+      - alert: DBActiveConnectionsHigh
+        expr: db_connections_active > 80
+        for: 5m
+        labels:
+          severity: warning
+          sli: db_connections
+        annotations:
+          summary: "Active DB connections above 80 (currently {{ $value }})"
+          description: "PostgreSQL active connection count has been above 80 for 5 minutes."

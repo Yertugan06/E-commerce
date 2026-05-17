@@ -17,9 +17,10 @@ output "postgres" {
 output "backend" {
   description = "Backend API details"
   value = {
-    container_name = docker_container.backend.name
-    url            = "http://localhost:${var.backend_port_external}"
-    docs_url       = "http://localhost:${var.backend_port_external}/docs"
+    container_names = [for c in docker_container.backend : c.name]
+    url             = "http://localhost:${var.nginx_port_external}"
+    docs_url        = "http://localhost:${var.nginx_port_external}/docs"
+    replicas        = var.backend_replicas
   }
 }
 
@@ -28,5 +29,43 @@ output "frontend" {
   value = {
     container_name = docker_container.frontend.name
     url            = "http://localhost:${var.frontend_port_external}"
+  }
+}
+
+output "nginx" {
+  description = "Nginx load balancer details"
+  value = {
+    container_name = docker_container.nginx.name
+    url            = "http://localhost:${var.nginx_port_external}"
+  }
+}
+
+output "prometheus" {
+  description = "Prometheus monitoring details"
+  value = {
+    container_name = docker_container.prometheus.name
+    url            = "http://localhost:${var.prometheus_port_external}"
+  }
+}
+
+output "grafana" {
+  description = "Grafana dashboard details"
+  value = {
+    container_name = docker_container.grafana.name
+    url            = "http://localhost:${var.grafana_port_external}"
+    admin_password = var.grafana_admin_password
+  }
+  sensitive = true
+}
+
+output "autoscaler" {
+  description = "Auto-scaler configuration"
+  value = {
+    container_name  = docker_container.autoscaler.name
+    min_replicas    = var.autoscaler_min_replicas
+    max_replicas    = var.autoscaler_max_replicas
+    scale_up_cpu    = var.autoscaler_scale_up_threshold
+    scale_down_cpu  = var.autoscaler_scale_down_threshold
+    cooldown        = var.autoscaler_cooldown_seconds
   }
 }

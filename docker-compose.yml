@@ -20,7 +20,7 @@ services:
     build: ./backend
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/ecommerce
       SECRET_KEY: change-me-to-a-random-secret-key
@@ -30,6 +30,14 @@ services:
       postgres:
         condition: service_healthy
 
+  nginx:
+    build: ./nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    depends_on:
+      - backend
+
   frontend:
     build: ./frontend
     restart: unless-stopped
@@ -38,7 +46,28 @@ services:
     environment:
       VITE_API_URL: http://localhost:8000
     depends_on:
-      - backend
+      - nginx
+
+  locust:
+    build: ./loadtesting
+    restart: "no"
+    ports:
+      - "8089:8089"
+    environment:
+      LOCUST_HOST: http://nginx:80
+      PRODUCT_IDS: "101,102,103,104,105"
+    command:
+      - "--autostart"
+      - "--autoquit"
+      - "60"
+      - "-u"
+      - "50"
+      - "-r"
+      - "10"
+      - "--run-time"
+      - "10m"
+    depends_on:
+      - nginx
 
   prometheus:
     image: prom/prometheus:v2.53.0
@@ -68,6 +97,27 @@ services:
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - prometheus
+
+  autoscaler:
+    build: ./autoscaler
+    restart: unless-stopped
+    environment:
+      AUTOSCALER_PROMETHEUS_URL: http://prometheus:9090
+      AUTOSCALER_COMPOSE_PROJECT: e-commerce
+      AUTOSCALER_SERVICE_NAME: backend
+      AUTOSCALER_MIN_REPLICAS: "1"
+      AUTOSCALER_MAX_REPLICAS: "5"
+      AUTOSCALER_SCALE_UP_THRESHOLD: "0.70"
+      AUTOSCALER_SCALE_DOWN_THRESHOLD: "0.30"
+      AUTOSCALER_COOLDOWN_SECONDS: "60"
+      AUTOSCALER_P95_LATENCY_THRESHOLD: "1.0"
+      AUTOSCALER_REQUEST_RATE_THRESHOLD: "50"
+      AUTOSCALER_POLL_INTERVAL: "15"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - prometheus
+      - backend
 
 volumes:
   postgres_data:

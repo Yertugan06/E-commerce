@@ -23,8 +23,8 @@ async def test_metrics_endpoint(client: AsyncClient):
     body = response.text
     assert "http_requests_total" in body
     assert "http_request_duration_seconds" in body
-    assert "process_cpu_seconds_total" in body
-    assert "process_resident_memory_bytes" in body
+    assert "app_process_cpu_seconds_total" in body
+    assert "app_process_resident_memory_bytes" in body
 
 
 @pytest.mark.asyncio
