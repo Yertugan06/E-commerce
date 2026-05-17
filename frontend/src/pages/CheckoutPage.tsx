@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '../entities/cart/store';
 import { useOrdersStore } from '../entities/orders/store';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
-  const { items } = useCartStore();
+  const { items, fetchCart } = useCartStore();
   const { checkout } = useOrdersStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
 
   const handleCheckout = async () => {
     setLoading(true);

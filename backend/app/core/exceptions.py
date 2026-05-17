@@ -2,8 +2,8 @@ from fastapi import HTTPException, status
 
 
 class AppHTTPException(HTTPException):
-    def __init__(self, status_code: int, detail: str, error_code: str = "GENERIC_ERROR"):
-        super().__init__(status_code=status_code, detail={"message": detail, "error_code": error_code})
+    def __init__(self, status_code: int, detail: str, error_code: str = "GENERIC_ERROR", headers: dict | None = None):
+        super().__init__(status_code=status_code, detail={"message": detail, "error_code": error_code}, headers=headers)
 
 
 AUTH_INVALID_CREDENTIALS = lambda: AppHTTPException(  # noqa: E731

@@ -1,14 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../entities/cart/store';
-import { QuantitySelector } from '../widgets/cart/QuantitySelector';
 
 export function CartSummary() {
-  const { items, loading, fetchCart, updateQuantity, removeItem } = useCartStore();
-
-  useEffect(() => {
-    fetchCart();
-  }, [fetchCart]);
+  const { items, loading, updateQuantity, removeItem } = useCartStore();
 
   if (loading && items.length === 0) {
     return <div style={{ color: '#94A3B8', padding: '24px 0' }}>Loading cart...</div>;
@@ -106,7 +101,11 @@ export function CartPage() {
 
   const handleCheckout = async () => {
     setCheckoutLoading(true);
-    navigate('/checkout');
+    try {
+      navigate('/checkout');
+    } finally {
+      setCheckoutLoading(false);
+    }
   };
 
   return (

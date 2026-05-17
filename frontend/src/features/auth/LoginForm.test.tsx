@@ -6,11 +6,15 @@ import { LoginForm } from './LoginForm';
 import { useAuthStore } from '../../entities/auth/store';
 import client from '../../shared/api/client';
 
-vi.mock('../../shared/api/client', () => ({
-  default: {
-    post: vi.fn(),
-  },
-}));
+vi.mock('../../shared/api/client', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('../../shared/api/client')>();
+  return {
+    default: {
+      ...mod.default,
+      post: vi.fn(),
+    },
+  };
+});
 
 function renderLoginForm() {
   return render(
@@ -49,7 +53,7 @@ describe('LoginForm', () => {
 
   it('calls login on success', async () => {
     (client.post as any).mockResolvedValue({
-      data: { access_token: 'token', user: { id: '1', email: 'test@test.com' } },
+      data: { access_token: 'token', user: { id: 1, email: 'test@test.com' } },
     });
 
     renderLoginForm();

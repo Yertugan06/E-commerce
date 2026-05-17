@@ -6,6 +6,7 @@ interface CartItem {
   cart_id: number;
   product_id: number;
   quantity: number;
+  unit_price?: number;
 }
 
 interface Cart {

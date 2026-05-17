@@ -9,18 +9,18 @@ describe('useAuthStore', () => {
 
   it('login stores token and user in state and localStorage', () => {
     const { login } = useAuthStore.getState();
-    login('test-token', { id: '1', email: 'test@test.com' });
+    login('test-token', { id: 1, email: 'test@test.com' });
 
     const state = useAuthStore.getState();
     expect(state.token).toBe('test-token');
-    expect(state.user).toEqual({ id: '1', email: 'test@test.com' });
+    expect(state.user).toEqual({ id: 1, email: 'test@test.com' });
     expect(localStorage.getItem('token')).toBe('test-token');
-    expect(localStorage.getItem('user')).toBe(JSON.stringify({ id: '1', email: 'test@test.com' }));
+    expect(localStorage.getItem('user')).toBe(JSON.stringify({ id: 1, email: 'test@test.com' }));
   });
 
   it('logout clears token and user', () => {
     const { login, logout } = useAuthStore.getState();
-    login('test-token', { id: '1', email: 'test@test.com' });
+    login('test-token', { id: 1, email: 'test@test.com' });
     logout();
 
     const state = useAuthStore.getState();
