@@ -32,9 +32,9 @@ We use specific tools and environment isolation. Always default to these command
 ## 4. Deep-Dive Documentation Pointers (Progressive Disclosure)
 Do not guess schema layouts or complex validation rules. Read these specific files *only* if your current task explicitly requires modifying these subsystems:
 
-- [ ] Database Schema & ERD details: See `docs/agent/database_schema.md`
+- Database Schema & ERD details: See `docs/agent/database_schema.md`
 - Authentication & JWT implementation details: See `docs/agent/auth_flow.md`
-- [ ] Checkout Transaction & Stock Locking state rules: See `docs/agent/checkout_state.md`
-- [ ] Frontend State Management (Zustand) patterns: See `docs/agent/frontend_state.md`
-
+- Checkout Transaction & Stock Locking state rules: See `docs/agent/checkout_state.md`
+- Frontend State Management (Zustand) patterns: See `docs/agent/frontend_state.md`
+- Repository Layout & Structural Synchronization: See `docs/agent/repo_map_guidelines.md` before making file structure modifications or completing large tasks.
 
