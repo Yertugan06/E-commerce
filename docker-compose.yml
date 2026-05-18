@@ -69,7 +69,7 @@ services:
     depends_on:
       - nginx
 
-   alertmanager:
+  alertmanager:
     image: prom/alertmanager:v0.27.0
     restart: unless-stopped
     ports:
@@ -124,7 +124,6 @@ services:
     restart: unless-stopped
     environment:
       AUTOSCALER_PROMETHEUS_URL: http://prometheus:9090
-      AUTOSCALER_COMPOSE_PROJECT: e-commerce
       AUTOSCALER_SERVICE_NAME: backend
       AUTOSCALER_MIN_REPLICAS: "1"
       AUTOSCALER_MAX_REPLICAS: "5"

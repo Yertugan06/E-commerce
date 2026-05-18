@@ -81,6 +81,11 @@ resource "docker_container" "backend" {
   image  = local.backend_image_ref
   restart = "unless-stopped"
 
+  labels {
+    label = "com.ecommerce.autoscaler"
+    value = "backend"
+  }
+
   networks_advanced {
     name    = docker_network.this.name
     aliases = ["backend"]
