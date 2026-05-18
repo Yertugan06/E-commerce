@@ -3,14 +3,11 @@ name: Terraform Plan
 on:
   pull_request:
     paths:
-      - terraform/**
+      - 'terraform/**'
 
 jobs:
   plan:
     runs-on: ubuntu-latest
-
-    env:
-      TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -19,7 +16,6 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ">= 1.6"
-          cli_config_credentials_token: ${{ secrets.TFE_TOKEN }}
 
       - name: Terraform init
         run: terraform -chdir=terraform init

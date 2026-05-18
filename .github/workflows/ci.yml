@@ -23,7 +23,6 @@ env:
 jobs:
   backend-tests:
     runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres:15-alpine
@@ -62,7 +61,6 @@ jobs:
 
   frontend-tests:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -105,8 +103,11 @@ jobs:
           driver: docker-container
 
       - name: Lowercase repository name
-        run: echo "REPOSITORY_LC=$($env:GITHUB_REPOSITORY.ToLower())" >> $env:GITHUB_ENV
+        run: |
+          REPO_LC=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "REPOSITORY_LC=${REPO_LC}" >> $GITHUB_ENV
 
+      # Backend Build
       - name: Extract metadata for backend
         id: meta-backend
         uses: docker/metadata-action@v5
@@ -126,6 +127,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # Frontend Build
       - name: Extract metadata for frontend
         id: meta-frontend
         uses: docker/metadata-action@v5
@@ -145,6 +147,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # Nginx Build
       - name: Extract metadata for nginx
         id: meta-nginx
         uses: docker/metadata-action@v5
@@ -164,6 +167,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # Autoscaler Build
       - name: Extract metadata for autoscaler
         id: meta-autoscaler
         uses: docker/metadata-action@v5
@@ -187,7 +191,6 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.run_load_test
     needs: [backend-tests, frontend-tests]
     runs-on: ubuntu-latest
-
     services:
       postgres:
         image: postgres:15-alpine
@@ -228,7 +231,7 @@ jobs:
           docker compose run --rm locust \
             -f /locustfile.py --headless \
             -u 20 -r 5 --run-time 3m \
-            --host http://backend:8000 \
+            ---host http://backend:8000 \
             --csv /tmp/locust_report \
             --html /tmp/locust_report.html
 
