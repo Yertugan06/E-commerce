@@ -77,6 +77,36 @@ process_resident_memory_bytes = Gauge(
     "Resident memory size in bytes",
 )
 
+autoscaler_replicas_current = Gauge(
+    "autoscaler_replicas_current",
+    "Current number of backend replicas",
+)
+
+autoscaler_replicas_desired = Gauge(
+    "autoscaler_replicas_desired",
+    "Desired number of backend replicas",
+)
+
+autoscaler_replicas_min = Gauge(
+    "autoscaler_replicas_min",
+    "Minimum configured backend replicas",
+)
+
+autoscaler_replicas_max = Gauge(
+    "autoscaler_replicas_max",
+    "Maximum configured backend replicas",
+)
+
+autoscaler_scale_up_events_total = Counter(
+    "autoscaler_scale_up_events_total",
+    "Total scale-up events",
+)
+
+autoscaler_scale_down_events_total = Counter(
+    "autoscaler_scale_down_events_total",
+    "Total scale-down events",
+)
+
 psutil = None
 try:
     import psutil as _psutil
@@ -158,6 +188,17 @@ def _generate_batch():
             pass
     process_cpu_seconds_total.set(random.uniform(100, 500))
     process_resident_memory_bytes.set(random.randint(80_000_000, 200_000_000))
+
+    replicas = random.randint(1, 4)
+    autoscaler_replicas_current.set(replicas)
+    autoscaler_replicas_desired.set(replicas)
+    autoscaler_replicas_min.set(1)
+    autoscaler_replicas_max.set(5)
+
+    if random.random() < 0.05:
+        autoscaler_scale_up_events_total.inc()
+    if random.random() < 0.03:
+        autoscaler_scale_down_events_total.inc()
 
 
 def _seed_initial_metrics():

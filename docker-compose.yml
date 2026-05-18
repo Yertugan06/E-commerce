@@ -69,6 +69,19 @@ services:
     depends_on:
       - nginx
 
+   alertmanager:
+    image: prom/alertmanager:v0.27.0
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    depends_on:
+      - prometheus
+
   prometheus:
     image: prom/prometheus:v2.53.0
     restart: unless-stopped
@@ -97,6 +110,14 @@ services:
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - prometheus
+
+  metrics-generator:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.generator
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
 
   autoscaler:
     build: ./autoscaler

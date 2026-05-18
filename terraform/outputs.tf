@@ -58,6 +58,14 @@ output "grafana" {
   sensitive = true
 }
 
+output "alertmanager" {
+  description = "Alertmanager details"
+  value = {
+    container_name = docker_container.alertmanager.name
+    url            = "http://localhost:${var.alertmanager_port_external}"
+  }
+}
+
 output "autoscaler" {
   description = "Auto-scaler configuration"
   value = {

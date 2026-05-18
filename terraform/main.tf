@@ -251,6 +251,36 @@ resource "docker_container" "grafana" {
   depends_on = [docker_container.prometheus]
 }
 
+# ── Alertmanager ──────────────────────────────────────────────────────────────
+
+resource "docker_container" "alertmanager" {
+  name    = var.alertmanager_container_name
+  image   = var.alertmanager_image
+  restart = "unless-stopped"
+
+  networks_advanced {
+    name = docker_network.this.name
+  }
+
+  ports {
+    internal = 9093
+    external = var.alertmanager_port_external
+  }
+
+  volumes {
+    container_path = "/etc/alertmanager/alertmanager.yml"
+    host_path      = abspath("${path.module}/../prometheus/alertmanager.yml")
+    read_only      = true
+  }
+
+  command = [
+    "--config.file=/etc/alertmanager/alertmanager.yml",
+    "--storage.path=/alertmanager",
+  ]
+
+  depends_on = [docker_container.prometheus]
+}
+
 # ── Auto-Scaler ───────────────────────────────────────────────────────────────
 
 resource "docker_image" "autoscaler" {

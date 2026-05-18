@@ -251,6 +251,26 @@ variable "autoscaler_poll_interval" {
   default     = 15
 }
 
+# ── Alertmanager ─────────────────────────────────────────────────────────────
+
+variable "alertmanager_image" {
+  description = "Alertmanager Docker image tag"
+  type        = string
+  default     = "prom/alertmanager:v0.27.0"
+}
+
+variable "alertmanager_container_name" {
+  description = "Name of the Alertmanager container"
+  type        = string
+  default     = "ecommerce-alertmanager"
+}
+
+variable "alertmanager_port_external" {
+  description = "Host port mapped to Alertmanager (9093)"
+  type        = number
+  default     = 9093
+}
+
 # ── Registry / CI-CD overrides ──────────────────────────────────────────────
 
 variable "backend_image_registry_prefix" {
