@@ -105,8 +105,7 @@ jobs:
           driver: docker-container
 
       - name: Lowercase repository name
-        shell: bash
-        run: echo "REPOSITORY_LC=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+        run: echo "REPOSITORY_LC=$($env:GITHUB_REPOSITORY.ToLower())" >> $env:GITHUB_ENV
 
       - name: Extract metadata for backend
         id: meta-backend
