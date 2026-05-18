@@ -108,7 +108,7 @@ jobs:
         id: meta-backend
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.BACKEND_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ lower(github.repository) }}/${{ env.BACKEND_IMAGE_NAME }}
           tags: |
             type=sha,format=short
             type=raw,value=latest,enable={{is_default_branch}}
@@ -127,7 +127,7 @@ jobs:
         id: meta-frontend
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.FRONTEND_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ lower(github.repository) }}/${{ env.FRONTEND_IMAGE_NAME }}
           tags: |
             type=sha,format=short
             type=raw,value=latest,enable={{is_default_branch}}
@@ -146,7 +146,7 @@ jobs:
         id: meta-nginx
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.NGINX_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ lower(github.repository) }}/${{ env.NGINX_IMAGE_NAME }}
           tags: |
             type=sha,format=short
             type=raw,value=latest,enable={{is_default_branch}}
@@ -165,7 +165,7 @@ jobs:
         id: meta-autoscaler
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.AUTOSCALER_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ lower(github.repository) }}/${{ env.AUTOSCALER_IMAGE_NAME }}
           tags: |
             type=sha,format=short
             type=raw,value=latest,enable={{is_default_branch}}

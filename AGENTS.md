@@ -39,20 +39,6 @@ We use specific tools and environment isolation. Always default to these command
 - **Terraform Plan (`terraform-plan.yml`):** Runs speculative plans on PRs modifying the `terraform/` directory. Authenticates to HCP Terraform via `TFE_TOKEN`.
 - **Manual Emergency Deploy:** Execute `GITHUB_REPOSITORY_OWNER=myuser TFE_TOKEN=$(cat ~/.terraform.d/credentials.tfrc.json | jq -r '.credentials."app.terraform.io".token') ./scripts/deploy.sh` if GitHub Actions is unavailable.
 
-### HCP Terraform — Local State Migration
-To migrate the existing local state to the HCP Terraform remote backend:
-```bash
-cd terraform
-terraform login   # interactive — creates token at ~/.terraform.d/credentials.tfrc.json
-terraform init    # prompts to copy existing local state → HCP Terraform
-terraform apply   # verifies everything works against remote state
-```
-
-If running headless:
-```bash
-export TFE_TOKEN="<your-hcp-api-token>"
-terraform -chdir=terraform init
-```
 
 ## 4. Deep-Dive Documentation Pointers (Progressive Disclosure)
 Do not guess schema layouts or complex validation rules. Read these specific files *only* if your current task explicitly requires modifying these subsystems:
