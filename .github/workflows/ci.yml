@@ -104,11 +104,14 @@ jobs:
         with:
           driver: docker-container
 
+      - name: Lowercase repository name
+        run: echo "REPOSITORY_LC=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
       - name: Extract metadata for backend
         id: meta-backend
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ lower(github.repository) }}/${{ env.BACKEND_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/${{ env.BACKEND_IMAGE_NAME }}
           tags: |
             type=sha,format=short
             type=raw,value=latest,enable={{is_default_branch}}
@@ -127,7 +130,7 @@ jobs:
         id: meta-frontend
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ lower(github.repository) }}/${{ env.FRONTEND_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/${{ env.FRONTEND_IMAGE_NAME }}
           tags: |
             type=sha,format=short
             type=raw,value=latest,enable={{is_default_branch}}
@@ -146,7 +149,7 @@ jobs:
         id: meta-nginx
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ lower(github.repository) }}/${{ env.NGINX_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/${{ env.NGINX_IMAGE_NAME }}
           tags: |
             type=sha,format=short
             type=raw,value=latest,enable={{is_default_branch}}
@@ -165,7 +168,7 @@ jobs:
         id: meta-autoscaler
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ lower(github.repository) }}/${{ env.AUTOSCALER_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/${{ env.AUTOSCALER_IMAGE_NAME }}
           tags: |
             type=sha,format=short
             type=raw,value=latest,enable={{is_default_branch}}

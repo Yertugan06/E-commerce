@@ -23,6 +23,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Lowercase repository name
+        run: echo "REPOSITORY_LC=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -31,24 +34,24 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull latest backend image
-        run: docker pull ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.BACKEND_IMAGE_NAME }}:latest
+        run: docker pull ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/${{ env.BACKEND_IMAGE_NAME }}:latest
 
       - name: Pull latest frontend image
-        run: docker pull ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
+        run: docker pull ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
 
       - name: Pull latest nginx image
-        run: docker pull ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.NGINX_IMAGE_NAME }}:latest
+        run: docker pull ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/${{ env.NGINX_IMAGE_NAME }}:latest
 
       - name: Pull latest autoscaler image
-        run: docker pull ${{ env.REGISTRY }}/${{ github.repository }}/${{ env.AUTOSCALER_IMAGE_NAME }}:latest
+        run: docker pull ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/${{ env.AUTOSCALER_IMAGE_NAME }}:latest
 
       - name: Write deploy tfvars
         run: |
           @"
-          backend_image_registry_prefix    = "${{ env.REGISTRY }}/${{ github.repository }}/"
-          frontend_image_registry_prefix   = "${{ env.REGISTRY }}/${{ github.repository }}/"
-          nginx_image_registry_prefix      = "${{ env.REGISTRY }}/${{ github.repository }}/"
-          autoscaler_image_registry_prefix = "${{ env.REGISTRY }}/${{ github.repository }}/"
+          backend_image_registry_prefix    = "${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/"
+          frontend_image_registry_prefix   = "${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/"
+          nginx_image_registry_prefix      = "${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/"
+          autoscaler_image_registry_prefix = "${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/"
           backend_image_tag    = "latest"
           frontend_image_tag   = "latest"
           nginx_image_tag      = "latest"
