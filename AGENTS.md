@@ -31,14 +31,7 @@ We use specific tools and environment isolation. Always default to these command
 ### Monorepo Orchestration
 - **Docker Compose:** Use `docker-compose up --build` to spin up local PostgreSQL, backend, and frontend concurrently for integration testing.
   - *Note:* The local `.venv` is excluded from containers via `.dockerignore`. Do not attempt to run `uv` commands inside docker services manually.
-- **Terraform (IaC):** Use `terraform -chdir=terraform apply` to provision the full stack via the Docker provider. **State is stored remotely in HCP Terraform** (`my-ecommerce-org/ecommerce-production`). Authenticate via `terraform login` or the `TFE_TOKEN` environment variable before running `terraform init`.
-
-### CI/CD Workflows
-- **CI (`ci.yml`):** Triggers on pushes/PRs to `main`. Runs backend/frontend tests, lints, and builds/pushes Docker images to GHCR on merge.
-- **Deploy (`deploy.yml`):** Automatically deploys via Terraform to a self-hosted runner tagged `[self-hosted, laptop]` upon a successful merge to `main`. Authenticates to GHCR and HCP Terraform using built-in tokens (`GITHUB_TOKEN` + `TFE_TOKEN`).
-- **Terraform Plan (`terraform-plan.yml`):** Runs speculative plans on PRs modifying the `terraform/` directory. Authenticates to HCP Terraform via `TFE_TOKEN`.
-- **Manual Emergency Deploy:** Execute `GITHUB_REPOSITORY_OWNER=myuser TFE_TOKEN=$(cat ~/.terraform.d/credentials.tfrc.json | jq -r '.credentials."app.terraform.io".token') ./scripts/deploy.sh` if GitHub Actions is unavailable.
-
+- **Terraform (IaC):** Use `terraform -chdir=terraform apply` to provision the full stack via the Docker provider. 
 
 ## 4. Deep-Dive Documentation Pointers (Progressive Disclosure)
 Do not guess schema layouts or complex validation rules. Read these specific files *only* if your current task explicitly requires modifying these subsystems:

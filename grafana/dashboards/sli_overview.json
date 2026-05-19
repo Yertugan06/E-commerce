@@ -1,9 +1,9 @@
 {
-  "title": "E-Commerce SLI Overview",
+  "title": "E-Commerce SLI Overview Dashboard",
   "uid": "ecommerce-sli-overview",
-  "tags": ["sli", "ecommerce"],
+  "tags": ["sli", "production"],
   "timezone": "browser",
-  "refresh": "15s",
+  "refresh": "5s",
   "editable": true,
   "panels": [
     {
@@ -11,12 +11,12 @@
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 1,
       "panels": [],
-      "title": "API Health",
+      "title": "Core System SLIs",
       "type": "row"
     },
     {
       "id": 2,
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 1 },
       "type": "stat",
       "title": "API Availability",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -24,9 +24,7 @@
         "colorMode": "thresholds",
         "graphMode": "area",
         "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
-        "textMode": "auto"
+        "reduceOptions": { "calcs": ["lastNotNull"] }
       },
       "fieldConfig": {
         "defaults": {
@@ -35,8 +33,8 @@
             "mode": "absolute",
             "steps": [
               { "color": "red", "value": null },
-              { "color": "yellow", "value": 0.999 },
-              { "color": "green", "value": 0.9999 }
+              { "color": "yellow", "value": 0.99 },
+              { "color": "green", "value": 0.999 }
             ]
           },
           "min": 0,
@@ -44,22 +42,20 @@
         }
       },
       "targets": [
-        { "expr": "sli:api_availability:ratio_5m", "legendFormat": "Availability", "refId": "A" }
+        { "expr": "sli:api_availability:ratio_5m", "legendFormat": "Availability Ratio", "refId": "A" }
       ]
     },
     {
       "id": 3,
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 1 },
       "type": "stat",
-      "title": "5xx Error Rate",
+      "title": "Checkout Success Rate",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "options": {
         "colorMode": "thresholds",
         "graphMode": "area",
         "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
-        "textMode": "auto"
+        "reduceOptions": { "calcs": ["lastNotNull"] }
       },
       "fieldConfig": {
         "defaults": {
@@ -67,9 +63,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.005 },
-              { "color": "red", "value": 0.01 }
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.97 },
+              { "color": "green", "value": 0.995 }
             ]
           },
           "min": 0,
@@ -77,22 +73,181 @@
         }
       },
       "targets": [
-        { "expr": "sli:5xx_error_rate:5m", "legendFormat": "Error Rate", "refId": "A" }
+        { "expr": "sli:checkout_success_rate:5m", "legendFormat": "Success Rate", "refId": "A" }
       ]
     },
     {
       "id": 4,
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 1 },
       "type": "stat",
-      "title": "Database Status",
+      "title": "Cart Consistency Rate",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": {
+        "colorMode": "thresholds",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.99 },
+              { "color": "green", "value": 0.999 }
+            ]
+          },
+          "min": 0,
+          "max": 1
+        }
+      },
+      "targets": [
+        { "expr": "sli:cart_consistency_rate:5m", "legendFormat": "Consistency Rate", "refId": "A" }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 5,
+      "panels": [],
+      "title": "ASGI Latency Profiles (p95 Targets)",
+      "type": "row"
+    },
+    {
+      "id": 6,
+      "gridPos": { "h": 7, "w": 5, "x": 0, "y": 6 },
+      "type": "timeseries",
+      "title": "Cart Read Latency (p95) - GET /cart",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.3 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        { "expr": "sli:cart_read_latency_p95:5m", "legendFormat": "p95 Cart Read", "refId": "A" }
+      ]
+    },
+    {
+      "id": 7,
+      "gridPos": { "h": 7, "w": 5, "x": 5, "y": 6 },
+      "type": "timeseries",
+      "title": "Order Read Latency (p95) - GET /orders",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.5 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        { "expr": "sli:order_read_latency_p95:5m", "legendFormat": "p95 Order Read", "refId": "A" }
+      ]
+    },
+    {
+      "id": 8,
+      "gridPos": { "h": 7, "w": 5, "x": 10, "y": 6 },
+      "type": "timeseries",
+      "title": "Cart Update Latency (p95) - POST /cart/items",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.5 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        { "expr": "sli:cart_update_latency_p95:5m", "legendFormat": "p95 Cart Update", "refId": "A" }
+      ]
+    },
+    {
+      "id": 9,
+      "gridPos": { "h": 7, "w": 5, "x": 15, "y": 6 },
+      "type": "timeseries",
+      "title": "Checkout Latency (p95) - POST /checkout",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 2.0 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        { "expr": "sli:checkout_latency_p95:5m", "legendFormat": "p95 Checkout", "refId": "A" }
+      ]
+    },
+    {
+      "id": 10,
+      "gridPos": { "h": 7, "w": 4, "x": 20, "y": 6 },
+      "type": "timeseries",
+      "title": "Auth Latency (p95) - POST /auth/login",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1.0 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        { "expr": "sli:auth_latency_p95:5m", "legendFormat": "p95 Auth", "refId": "A" }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+      "id": 11,
+      "panels": [],
+      "title": "Operations",
+      "type": "row"
+    },
+    {
+      "id": 12,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 14 },
+      "type": "stat",
+      "title": "Database Availability (pg_isready)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "options": {
         "colorMode": "thresholds",
         "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
-        "textMode": "auto"
+        "reduceOptions": { "calcs": ["lastNotNull"] }
       },
       "fieldConfig": {
         "defaults": {
@@ -104,27 +259,24 @@
             ]
           },
           "mappings": [
-            { "type": "value", "options": { "0": { "text": "Down", "color": "red" }, "1": { "text": "Up", "color": "green" } } }
+            { "type": "value", "options": { "0": { "text": "Down", "color": "red" }, "1": { "text": "Up (Healthy)", "color": "green" } } }
           ]
         }
       },
       "targets": [
-        { "expr": "db_available", "legendFormat": "DB", "refId": "A" }
+        { "expr": "max(db_available)", "refId": "A" }
       ]
     },
     {
-      "id": 5,
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "id": 13,
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 14 },
       "type": "stat",
       "title": "Active DB Connections",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "options": {
         "colorMode": "thresholds",
         "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
-        "textMode": "auto"
+        "reduceOptions": { "calcs": ["lastNotNull"] }
       },
       "fieldConfig": {
         "defaults": {
@@ -132,8 +284,8 @@
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "yellow", "value": 50 },
-              { "color": "red", "value": 80 }
+              { "color": "yellow", "value": 40 },
+              { "color": "red", "value": 75 }
             ]
           }
         }
@@ -143,411 +295,28 @@
       ]
     },
     {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
-      "id": 6,
-      "panels": [],
-      "title": "Latency (p95)",
-      "type": "row"
-    },
-    {
-      "id": 7,
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 6 },
-      "type": "timeseries",
-      "title": "Read Latency p95",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": {
-        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1.0 }
-            ]
-          }
-        }
-      },
-      "targets": [
-        { "expr": "sli:read_latency_p95:5m", "legendFormat": "Read p95", "refId": "A" }
-      ]
-    },
-    {
-      "id": 8,
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 6 },
-      "type": "timeseries",
-      "title": "Write Latency p95",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": {
-        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 2.0 }
-            ]
-          }
-        }
-      },
-      "targets": [
-        { "expr": "sli:write_latency_p95:5m", "legendFormat": "Write p95", "refId": "A" }
-      ]
-    },
-    {
-      "id": 9,
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 6 },
-      "type": "timeseries",
-      "title": "Auth Latency p95",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": {
-        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1.0 }
-            ]
-          }
-        }
-      },
-      "targets": [
-        { "expr": "sli:auth_latency_p95:5m", "legendFormat": "Auth p95", "refId": "A" }
-      ]
-    },
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
-      "id": 10,
-      "panels": [],
-      "title": "Checkout & Request Volume",
-      "type": "row"
-    },
-    {
-      "id": 11,
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
-      "type": "timeseries",
-      "title": "Request Volume by Status",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": {
-        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "cps"
-        }
-      },
-      "targets": [
-        { "expr": "rate(http_requests_total[5m])", "legendFormat": "{{status_group}}", "refId": "A" }
-      ]
-    },
-    {
-      "id": 12,
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 15 },
-      "type": "stat",
-      "title": "Checkout Success Rate",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": {
-        "colorMode": "thresholds",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
-        "textMode": "auto"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percentunit",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 0.9 },
-              { "color": "green", "value": 0.95 }
-            ]
-          },
-          "min": 0,
-          "max": 1
-        }
-      },
-      "targets": [
-        {
-          "expr": "rate(checkout_total{status=\"success\"}[30m]) / rate(checkout_total[30m])",
-          "legendFormat": "Success Rate",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 13,
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 15 },
-      "type": "stat",
-      "title": "Checkout Duration p95",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": {
-        "colorMode": "thresholds",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
-        "textMode": "auto"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 1.0 },
-              { "color": "red", "value": 2.0 }
-            ]
-          }
-        }
-      },
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.95, rate(checkout_duration_seconds_bucket[5m]))",
-          "legendFormat": "Checkout p95",
-          "refId": "A"
-        }
-      ]
-    },
-    {
       "id": 14,
-      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 19 },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 18 },
       "type": "timeseries",
-      "title": "Checkout Count by Status",
+      "title": "Container Memory Utilization",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": {
-        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
-      },
+      "fieldConfig": { "defaults": { "unit": "bytes" } },
       "targets": [
-        { "expr": "rate(checkout_total[5m])", "legendFormat": "{{status}}", "refId": "A" }
+        { "expr": "app_process_resident_memory_bytes", "legendFormat": "RSS Consumption", "refId": "A" }
       ]
     },
     {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
       "id": 15,
-      "panels": [],
-      "title": "SLI Validation & System Resources",
-      "type": "row"
-    },
-    {
-      "id": 16,
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 18 },
       "type": "timeseries",
-      "title": "Order Persistence Errors",
+      "title": "Container CPU Load",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": {
-        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "cps",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 0 }
-            ]
-          }
-        }
-      },
+      "fieldConfig": { "defaults": { "unit": "short" } },
       "targets": [
-        { "expr": "sli:order_persistence_errors:5m", "legendFormat": "Errors/s", "refId": "A" }
-      ]
-    },
-    {
-      "id": 17,
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
-      "type": "timeseries",
-      "title": "Cart Consistency Errors",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": {
-        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "cps",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 0 }
-            ]
-          }
-        }
-      },
-      "targets": [
-        { "expr": "sli:cart_consistency_errors:5m", "legendFormat": "Errors/s", "refId": "A" }
-      ]
-    },
-    {
-      "id": 18,
-      "gridPos": { "h": 8, "w": 4, "x": 16, "y": 24 },
-      "type": "timeseries",
-      "title": "Process Memory",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": {
-        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes"
-        }
-      },
-      "targets": [
-        { "expr": "app_process_resident_memory_bytes", "legendFormat": "Memory", "refId": "A" }
-      ]
-    },
-    {
-      "id": 19,
-      "gridPos": { "h": 8, "w": 4, "x": 20, "y": 24 },
-      "type": "timeseries",
-      "title": "Process CPU",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": {
-        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "cps"
-        }
-      },
-      "targets": [
-        { "expr": "rate(app_process_cpu_seconds_total[5m])", "legendFormat": "CPU", "refId": "A" }
-      ]
-    },
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
-      "id": 20,
-      "panels": [],
-      "title": "Auto-Scaling",
-      "type": "row"
-    },
-    {
-      "id": 21,
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 33 },
-      "type": "stat",
-      "title": "Backend Replicas",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": {
-        "colorMode": "thresholds",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
-        "textMode": "auto"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 3 },
-              { "color": "red", "value": 5 }
-            ]
-          }
-        }
-      },
-      "targets": [
-        { "expr": "autoscaler_replicas_current", "legendFormat": "Current", "refId": "A" }
-      ]
-    },
-    {
-      "id": 22,
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 33 },
-      "type": "stat",
-      "title": "Scale Events (24h)",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": {
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
-        "textMode": "auto"
-      },
-      "targets": [
-        { "expr": "autoscaler_scale_up_events_total", "legendFormat": "Up", "refId": "A" },
-        { "expr": "autoscaler_scale_down_events_total", "legendFormat": "Down", "refId": "B" }
-      ]
-    },
-    {
-      "id": 23,
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 33 },
-      "type": "timeseries",
-      "title": "Replicas Over Time",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": {
-        "legend": { "calcs": ["lastNotNull", "max", "min"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
-        }
-      },
-      "targets": [
-        { "expr": "autoscaler_replicas_current", "legendFormat": "Actual", "refId": "A" },
-        { "expr": "autoscaler_replicas_desired", "legendFormat": "Desired", "refId": "B" }
-      ]
-    },
-    {
-      "id": 24,
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 37 },
-      "type": "timeseries",
-      "title": "CPU Utilization vs Scaling Thresholds",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": {
-        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "right" },
-        "tooltip": { "mode": "multi" }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percentunit",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.5 },
-              { "color": "red", "value": 0.7 }
-            ]
-          },
-          "min": 0,
-          "max": 1
-        }
-      },
-      "targets": [
-        { "expr": "rate(app_process_cpu_seconds_total[2m])", "legendFormat": "CPU", "refId": "A" },
-        { "expr": "0.7", "legendFormat": "Scale-Up Threshold (70%)", "refId": "B" },
-        { "expr": "0.3", "legendFormat": "Scale-Down Threshold (30%)", "refId": "C" }
+        { "expr": "rate(app_process_cpu_seconds_total[2m])", "legendFormat": "Active Cores", "refId": "A" }
       ]
     }
   ],
   "schemaVersion": 39,
-  "version": 2
+  "version": 6
 }

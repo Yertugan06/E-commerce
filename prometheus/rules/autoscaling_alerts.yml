@@ -1,52 +1,31 @@
 groups:
-  - name: autoscaling
+  - name: k8s-autoscaling
     interval: 15s
     rules:
-      - alert: BackendScaleUp
-        expr: autoscaler_replicas_desired > autoscaler_replicas_current
-        for: 0m
-        labels:
-          severity: info
-          event: scale_up
-        annotations:
-          summary: "Auto-scaler increased backend replicas ({{ $value | humanize }} -> desired {{ $labels.desired }})"
-          description: "Backend CPU or latency exceeded threshold — scaling up."
-
-      - alert: BackendScaleDown
-        expr: autoscaler_replicas_desired < autoscaler_replicas_current
-        for: 0m
-        labels:
-          severity: info
-          event: scale_down
-        annotations:
-          summary: "Auto-scaler decreased backend replicas ({{ $value | humanize }} -> desired {{ $labels.desired }})"
-          description: "Backend CPU and latency are low — scaling down."
-
-      - alert: MaxReplicasReached
-        expr: autoscaler_replicas_current == autoscaler_replicas_max
+      - alert: K8sHPAMaxReplicasReached
+        expr: kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler="backend-hpa"} == kube_horizontalpodautoscaler_spec_max_replicas{horizontalpodautoscaler="backend-hpa"}
         for: 5m
         labels:
           severity: warning
           sli: autoscaling_capacity
         annotations:
-          summary: "Backend at max replicas ({{ $value | humanize }})"
-          description: "The backend has been running at maximum replica count for 5 minutes. Consider increasing AUTOSCALER_MAX_REPLICAS or investigating capacity."
+          summary: "HPA {{ $labels.horizontalpodautoscaler }} at maximum capacity"
+          description: "The HPA has reached its maximum configured replicas ({{ $value }}) for 5 minutes. The cluster may not be able to handle further load spikes."
 
-      - alert: ScaleDownBlocked
-        expr: rate(app_process_cpu_seconds_total[5m]) < 0.1 and autoscaler_replicas_current > autoscaler_replicas_min
-        for: 10m
-        labels:
-          severity: warning
-          sli: autoscaling_efficiency
-        annotations:
-          summary: "CPU very low but replicas not reducing ({{ $value | humanize }})"
-          description: "CPU utilization has been below 0.1 for 10 minutes but min replicas limit is holding. Consider reducing AUTOSCALER_MIN_REPLICAS."
-
-      - alert: AutoscalerDown
-        expr: up{job="autoscaler"} == 0
-        for: 1m
+      - alert: K8sHPAFailedToScale
+        expr: kube_horizontalpodautoscaler_status_condition{condition="AbleToScale", status="false"} == 1
+        for: 2m
         labels:
           severity: critical
         annotations:
-          summary: "Autoscaler is unreachable"
-          description: "The auto-scaler service has been down for over 1 minute. Auto-scaling is disabled."
+          summary: "HPA {{ $labels.horizontalpodautoscaler }} is unable to scale"
+          description: "The Kubernetes HPA controller is reporting that it cannot scale the deployment. Check cluster events and permissions."
+
+      - alert: K8sHPAMetricsMissing
+        expr: kube_horizontalpodautoscaler_status_condition{condition="ScalingActive", status="false"} == 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "HPA {{ $labels.horizontalpodautoscaler }} is missing metrics"
+          description: "The HPA cannot fetch utilization metrics to make scaling decisions. Auto-scaling is effectively frozen."

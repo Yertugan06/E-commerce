@@ -22,25 +22,45 @@ groups:
           summary: "PostgreSQL is unreachable"
           description: "The database health check has failed for over 1 minute."
 
-      - alert: ReadLatencyHigh
-        expr: sli:read_latency_p95:5m > 1.0
+      - alert: CartReadLatencyHigh
+        expr: sli:cart_read_latency_p95:5m > 0.3
         for: 5m
         labels:
           severity: warning
-          sli: read_latency
+          sli: cart_read_latency
         annotations:
-          summary: "Read latency p95 exceeds 1s (currently {{ $value | humanizeDuration }})"
-          description: "GET endpoint p95 latency has been above 1 second for 5 minutes."
+          summary: "Cart read latency p95 exceeds 300ms (currently {{ $value | humanizeDuration }})"
+          description: "GET /cart p95 latency has been above 300ms for 5 minutes."
 
-      - alert: WriteLatencyHigh
-        expr: sli:write_latency_p95:5m > 2.0
+      - alert: OrderReadLatencyHigh
+        expr: sli:order_read_latency_p95:5m > 0.5
         for: 5m
         labels:
           severity: warning
-          sli: write_latency
+          sli: order_read_latency
         annotations:
-          summary: "Write latency p95 exceeds 2s (currently {{ $value | humanizeDuration }})"
-          description: "POST endpoint p95 latency has been above 2 seconds for 5 minutes."
+          summary: "Order read latency p95 exceeds 500ms (currently {{ $value | humanizeDuration }})"
+          description: "GET /orders p95 latency has been above 500ms for 5 minutes."
+
+      - alert: CartUpdateLatencyHigh
+        expr: sli:cart_update_latency_p95:5m > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          sli: cart_update_latency
+        annotations:
+          summary: "Cart update latency p95 exceeds 500ms (currently {{ $value | humanizeDuration }})"
+          description: "POST /cart/items p95 latency has been above 500ms for 5 minutes."
+
+      - alert: CheckoutLatencyHigh
+        expr: sli:checkout_latency_p95:5m > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          sli: checkout_latency
+        annotations:
+          summary: "Checkout latency p95 exceeds 2000ms (currently {{ $value | humanizeDuration }})"
+          description: "POST /checkout p95 latency has been above 2000ms for 5 minutes."
 
       - alert: AuthLatencyHigh
         expr: sli:auth_latency_p95:5m > 1.0
@@ -49,55 +69,25 @@ groups:
           severity: warning
           sli: auth_latency
         annotations:
-          summary: "Auth latency p95 exceeds 1s (currently {{ $value | humanizeDuration }})"
-          description: "POST /auth/login p95 latency has been above 1 second for 5 minutes."
+          summary: "Auth latency p95 exceeds 1000ms (currently {{ $value | humanizeDuration }})"
+          description: "POST /auth/login p95 latency has been above 1000ms for 5 minutes."
 
-      - alert: FiveXXErrorRateHigh
-        expr: sli:5xx_error_rate:5m > 0.01
+      - alert: CheckoutSuccessRateLow
+        expr: sli:checkout_success_rate:5m < 0.995
         for: 5m
         labels:
           severity: critical
-          sli: five_xx_error_rate
+          sli: checkout_success_rate
         annotations:
-          summary: "5xx error rate exceeds 1% (currently {{ $value | humanizePercentage }})"
-          description: "The rate of HTTP 5xx responses has been above 1% for 5 minutes."
+          summary: "Checkout success rate below 99.5% (currently {{ $value | humanizePercentage }})"
+          description: "The proportion of successful POST /checkout responses has been below 99.5% for 5 minutes."
 
-      - alert: CheckoutFailureRateHigh
-        expr: sli:checkout_failure_rate:5m > 0.05
+      - alert: CartConsistencyRateLow
+        expr: sli:cart_consistency_rate:5m < 0.999
         for: 5m
         labels:
           severity: warning
-          sli: checkout_failure_rate
+          sli: cart_consistency_rate
         annotations:
-          summary: "Checkout failure rate exceeds 5% (currently {{ $value | humanizePercentage }})"
-          description: "The proportion of failed checkout requests has been above 5% for 5 minutes."
-
-      - alert: OrderPersistenceFailing
-        expr: sli:order_persistence_errors:5m > 0
-        for: 1m
-        labels:
-          severity: critical
-          sli: order_persistence
-        annotations:
-          summary: "Order read-after-write validation is failing"
-          description: "Orders created via checkout are not immediately readable. Data integrity issue."
-
-      - alert: CartConsistencyFailing
-        expr: sli:cart_consistency_errors:5m > 0
-        for: 1m
-        labels:
-          severity: warning
-          sli: cart_consistency
-        annotations:
-          summary: "Cart consistency validation is failing"
-          description: "Cart state does not reflect the latest mutation within expected time."
-
-      - alert: DBActiveConnectionsHigh
-        expr: db_connections_active > 80
-        for: 5m
-        labels:
-          severity: warning
-          sli: db_connections
-        annotations:
-          summary: "Active DB connections above 80 (currently {{ $value }})"
-          description: "PostgreSQL active connection count has been above 80 for 5 minutes."
+          summary: "Cart consistency rate below 99.9% (currently {{ $value | humanizePercentage }})"
+          description: "Cart consistency validation success rate has been below 99.9% for 5 minutes."
