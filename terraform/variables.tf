@@ -177,80 +177,6 @@ variable "grafana_admin_password" {
   default     = "admin"
 }
 
-# ── Auto-Scaler ───────────────────────────────────────────────────────────────
-
-variable "autoscaler_image_name" {
-  description = "Tag for the built autoscaler Docker image"
-  type        = string
-  default     = "ecommerce-autoscaler:latest"
-}
-
-variable "autoscaler_container_name" {
-  description = "Name of the autoscaler container"
-  type        = string
-  default     = "ecommerce-autoscaler"
-}
-
-variable "autoscaler_compose_project" {
-  description = "Docker Compose project name used by the autoscaler for scaling"
-  type        = string
-  default     = "ecommerce"
-}
-
-variable "autoscaler_service_name" {
-  description = "Docker Compose service name to scale"
-  type        = string
-  default     = "backend"
-}
-
-variable "autoscaler_min_replicas" {
-  description = "Minimum number of backend replicas"
-  type        = number
-  default     = 1
-}
-
-variable "autoscaler_max_replicas" {
-  description = "Maximum number of backend replicas"
-  type        = number
-  default     = 5
-}
-
-variable "autoscaler_scale_up_threshold" {
-  description = "CPU utilization ratio to trigger scale-up (0.0–1.0)"
-  type        = number
-  default     = 0.70
-}
-
-variable "autoscaler_scale_down_threshold" {
-  description = "CPU utilization ratio to trigger scale-down (0.0–1.0)"
-  type        = number
-  default     = 0.30
-}
-
-variable "autoscaler_cooldown_seconds" {
-  description = "Minimum seconds between scale actions"
-  type        = number
-  default     = 60
-}
-
-variable "autoscaler_p95_latency_threshold" {
-  description = "P95 read latency in seconds to trigger scale-up"
-  type        = number
-  default     = 1.0
-}
-
-variable "autoscaler_request_rate_threshold" {
-  description = "Requests per second per instance to trigger scale-up"
-  type        = number
-  default     = 50
-}
-
-variable "autoscaler_poll_interval" {
-  description = "Seconds between autoscaler evaluation cycles"
-  type        = number
-  default     = 15
-}
-
 # ── Alertmanager ─────────────────────────────────────────────────────────────
 
 variable "alertmanager_image" {
@@ -309,14 +235,3 @@ variable "nginx_image_tag" {
   default     = "latest"
 }
 
-variable "autoscaler_image_registry_prefix" {
-  description = "Registry prefix for the autoscaler image. When non-empty, Terraform pulls instead of building locally."
-  type        = string
-  default     = ""
-}
-
-variable "autoscaler_image_tag" {
-  description = "Image tag for the autoscaler when pulling from a registry."
-  type        = string
-  default     = "latest"
-}

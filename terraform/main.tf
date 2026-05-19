@@ -2,7 +2,6 @@ locals {
   backend_image_ref  = var.backend_image_registry_prefix  == "" ? var.backend_image_name  : "${trimspace(var.backend_image_registry_prefix)}ecommerce-backend:${var.backend_image_tag}"
   frontend_image_ref = var.frontend_image_registry_prefix == "" ? var.frontend_image_name : "${trimspace(var.frontend_image_registry_prefix)}ecommerce-frontend:${var.frontend_image_tag}"
   nginx_image_ref    = var.nginx_image_registry_prefix    == "" ? var.nginx_image_name    : "${trimspace(var.nginx_image_registry_prefix)}ecommerce-nginx:${var.nginx_image_tag}"
-  autoscaler_image_ref = var.autoscaler_image_registry_prefix == "" ? var.autoscaler_image_name : "${trimspace(var.autoscaler_image_registry_prefix)}ecommerce-autoscaler:${var.autoscaler_image_tag}"
 }
 
 resource "docker_network" "this" {
@@ -80,12 +79,6 @@ resource "docker_container" "backend" {
   name   = "${var.backend_container_name}-${count.index}"
   image  = local.backend_image_ref
   restart = "unless-stopped"
-
-  labels {
-    label = "com.ecommerce.autoscaler"
-    value = "backend"
-  }
-
   networks_advanced {
     name    = docker_network.this.name
     aliases = ["backend"]
@@ -286,50 +279,3 @@ resource "docker_container" "alertmanager" {
   depends_on = [docker_container.prometheus]
 }
 
-# ── Auto-Scaler ───────────────────────────────────────────────────────────────
-
-resource "docker_image" "autoscaler" {
-  count = var.autoscaler_image_registry_prefix == "" ? 1 : 0
-  name  = var.autoscaler_image_name
-  build {
-    context    = abspath("${path.module}/../autoscaler")
-    dockerfile = "Dockerfile"
-    tag        = [var.autoscaler_image_name]
-  }
-
-  triggers = {
-    dir_sha256 = filesha256(abspath("${path.module}/../autoscaler/Dockerfile"))
-  }
-}
-
-resource "docker_container" "autoscaler" {
-  name    = var.autoscaler_container_name
-  image   = local.autoscaler_image_ref
-  restart = "unless-stopped"
-
-  networks_advanced {
-    name = docker_network.this.name
-  }
-
-  env = [
-    "AUTOSCALER_PROMETHEUS_URL=http://${var.prometheus_container_name}:9090",
-    "AUTOSCALER_COMPOSE_PROJECT=${var.autoscaler_compose_project}",
-    "AUTOSCALER_SERVICE_NAME=${var.autoscaler_service_name}",
-    "AUTOSCALER_MIN_REPLICAS=${var.autoscaler_min_replicas}",
-    "AUTOSCALER_MAX_REPLICAS=${var.autoscaler_max_replicas}",
-    "AUTOSCALER_SCALE_UP_THRESHOLD=${var.autoscaler_scale_up_threshold}",
-    "AUTOSCALER_SCALE_DOWN_THRESHOLD=${var.autoscaler_scale_down_threshold}",
-    "AUTOSCALER_COOLDOWN_SECONDS=${var.autoscaler_cooldown_seconds}",
-    "AUTOSCALER_P95_LATENCY_THRESHOLD=${var.autoscaler_p95_latency_threshold}",
-    "AUTOSCALER_REQUEST_RATE_THRESHOLD=${var.autoscaler_request_rate_threshold}",
-    "AUTOSCALER_POLL_INTERVAL=${var.autoscaler_poll_interval}",
-  ]
-
-  volumes {
-    host_path      = "/var/run/docker.sock"
-    container_path = "/var/run/docker.sock"
-    read_only      = true
-  }
-
-  depends_on = [docker_container.prometheus, docker_container.backend]
-}

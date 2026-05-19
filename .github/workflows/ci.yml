@@ -12,7 +12,6 @@ env:
   BACKEND_IMAGE_NAME: ecommerce-backend
   FRONTEND_IMAGE_NAME: ecommerce-frontend
   NGINX_IMAGE_NAME: ecommerce-nginx
-  AUTOSCALER_IMAGE_NAME: ecommerce-autoscaler
 
 jobs:
   backend-tests:
@@ -158,25 +157,5 @@ jobs:
           push: true
           tags: ${{ steps.meta-nginx.outputs.tags }}
           labels: ${{ steps.meta-nginx.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # Autoscaler Build
-      - name: Extract metadata for autoscaler
-        id: meta-autoscaler
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/${{ env.AUTOSCALER_IMAGE_NAME }}
-          tags: |
-            type=sha,format=short
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push autoscaler image
-        uses: docker/build-push-action@v6
-        with:
-          context: autoscaler
-          push: true
-          tags: ${{ steps.meta-autoscaler.outputs.tags }}
-          labels: ${{ steps.meta-autoscaler.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

@@ -119,26 +119,6 @@ services:
     ports:
       - "8001:8000"
 
-  autoscaler:
-    build: ./autoscaler
-    restart: unless-stopped
-    environment:
-      AUTOSCALER_PROMETHEUS_URL: http://prometheus:9090
-      AUTOSCALER_SERVICE_NAME: backend
-      AUTOSCALER_MIN_REPLICAS: "1"
-      AUTOSCALER_MAX_REPLICAS: "5"
-      AUTOSCALER_SCALE_UP_THRESHOLD: "0.70"
-      AUTOSCALER_SCALE_DOWN_THRESHOLD: "0.30"
-      AUTOSCALER_COOLDOWN_SECONDS: "60"
-      AUTOSCALER_P95_LATENCY_THRESHOLD: "1.0"
-      AUTOSCALER_REQUEST_RATE_THRESHOLD: "50"
-      AUTOSCALER_POLL_INTERVAL: "15"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    depends_on:
-      - prometheus
-      - backend
-
 volumes:
   postgres_data:
   prometheus_data:

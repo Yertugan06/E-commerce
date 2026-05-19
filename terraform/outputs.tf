@@ -66,14 +66,3 @@ output "alertmanager" {
   }
 }
 
-output "autoscaler" {
-  description = "Auto-scaler configuration"
-  value = {
-    container_name  = docker_container.autoscaler.name
-    min_replicas    = var.autoscaler_min_replicas
-    max_replicas    = var.autoscaler_max_replicas
-    scale_up_cpu    = var.autoscaler_scale_up_threshold
-    scale_down_cpu  = var.autoscaler_scale_down_threshold
-    cooldown        = var.autoscaler_cooldown_seconds
-  }
-}

@@ -12,7 +12,6 @@ env:
   BACKEND_IMAGE_NAME: ecommerce-backend
   FRONTEND_IMAGE_NAME: ecommerce-frontend
   NGINX_IMAGE_NAME: ecommerce-nginx
-  AUTOSCALER_IMAGE_NAME: ecommerce-autoscaler
 
 jobs:
   deploy:
@@ -48,7 +47,7 @@ jobs:
           docker pull ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/${{ env.BACKEND_IMAGE_NAME }}:latest
           docker pull ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
           docker pull ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/${{ env.NGINX_IMAGE_NAME }}:latest
-          docker pull ${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/${{ env.AUTOSCALER_IMAGE_NAME }}:latest
+
 
       # Replaced 'cat <<EOF' (Linux) with a clean PowerShell Here-String
       - name: Write deploy tfvars
@@ -58,11 +57,9 @@ jobs:
           backend_image_registry_prefix    = "${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/"
           frontend_image_registry_prefix   = "${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/"
           nginx_image_registry_prefix      = "${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/"
-          autoscaler_image_registry_prefix = "${{ env.REGISTRY }}/${{ env.REPOSITORY_LC }}/"
           backend_image_tag    = "latest"
           frontend_image_tag   = "latest"
           nginx_image_tag      = "latest"
-          autoscaler_image_tag = "latest"
           "@ | Out-File -FilePath terraform/deploy.auto.tfvars -Encoding utf8
 
       - name: Terraform init
