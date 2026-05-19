@@ -53,3 +53,8 @@ app.include_router(checkout_router)
 @app.get("/")
 async def root():
     return {"status": "ok"}
+
+
+@app.get("/health")
+async def health(request: Request):
+    return await health_endpoint(request)

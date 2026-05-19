@@ -48,26 +48,6 @@ services:
     depends_on:
       - nginx
 
-  locust:
-    build: ./loadtesting
-    restart: "no"
-    ports:
-      - "8089:8089"
-    environment:
-      LOCUST_HOST: http://nginx:80
-      PRODUCT_IDS: "101,102,103,104,105"
-    command:
-      - "--autostart"
-      - "--autoquit"
-      - "60"
-      - "-u"
-      - "50"
-      - "-r"
-      - "10"
-      - "--run-time"
-      - "10m"
-    depends_on:
-      - nginx
 
   alertmanager:
     image: prom/alertmanager:v0.27.0

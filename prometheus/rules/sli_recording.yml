@@ -5,49 +5,49 @@ groups:
       - record: sli:api_availability:ratio_5m
         expr: |
           1 - (
-            rate(http_requests_total{status_group="5xx"}[5m])
+            sum(rate(http_requests_total{status_group="5xx"}[5m]))
             /
-            rate(http_requests_total[5m])
+            sum(rate(http_requests_total[5m]))
           )
 
       - record: sli:checkout_success_rate:5m
         expr: |
-          rate(checkout_total{status="success"}[5m])
+          sum(rate(checkout_total{status="success"}[5m]))
           /
-          (rate(checkout_total[5m]) > 0)
+          sum(rate(checkout_total[5m]))
 
       - record: sli:cart_read_latency_p95:5m
         expr: |
           histogram_quantile(0.95,
-            sum(rate(http_request_duration_seconds_bucket{path="/cart"}[5m])) by (le, method)
+            sum(rate(http_request_duration_seconds_bucket{path="/cart"}[5m])) by (le)
           )
 
       - record: sli:order_read_latency_p95:5m
         expr: |
           histogram_quantile(0.95,
-            sum(rate(http_request_duration_seconds_bucket{path="/orders"}[5m])) by (le, method)
+            sum(rate(http_request_duration_seconds_bucket{path="/orders"}[5m])) by (le)
           )
 
       - record: sli:cart_update_latency_p95:5m
         expr: |
           histogram_quantile(0.95,
-            sum(rate(http_request_duration_seconds_bucket{path="/cart/items"}[5m])) by (le, method)
+            sum(rate(http_request_duration_seconds_bucket{path="/cart/items"}[5m])) by (le)
           )
 
       - record: sli:checkout_latency_p95:5m
         expr: |
           histogram_quantile(0.95,
-            sum(rate(http_request_duration_seconds_bucket{path="/checkout"}[5m])) by (le, method)
+            sum(rate(http_request_duration_seconds_bucket{path="/checkout"}[5m])) by (le)
           )
 
       - record: sli:auth_latency_p95:5m
         expr: |
           histogram_quantile(0.95,
-            sum(rate(http_request_duration_seconds_bucket{path="/auth/login"}[5m])) by (le, method)
+            sum(rate(http_request_duration_seconds_bucket{path="/auth/login"}[5m])) by (le)
           )
 
       - record: sli:cart_consistency_rate:5m
         expr: |
-          rate(cart_consistency_validations_total{status="success"}[5m])
+          sum(rate(cart_consistency_validations_total{status="success"}[5m]))
           /
-          (rate(cart_consistency_validations_total[5m]) > 0)
+          sum(rate(cart_consistency_validations_total[5m]))
