@@ -91,14 +91,6 @@ services:
     depends_on:
       - prometheus
 
-  metrics-generator:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.generator
-    restart: unless-stopped
-    ports:
-      - "8001:8000"
-
 volumes:
   postgres_data:
   prometheus_data:

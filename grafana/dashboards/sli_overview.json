@@ -42,7 +42,7 @@
         }
       },
       "targets": [
-        { "expr": "sli:api_availability:ratio_5m", "legendFormat": "Availability Ratio", "refId": "A" }
+        { "expr": "sli:api_availability:ratio_5m", "legendFormat": "Availability", "refId": "A" }
       ]
     },
     {
@@ -104,7 +104,7 @@
         }
       },
       "targets": [
-        { "expr": "sli:cart_consistency_rate:5m", "legendFormat": "Consistency Rate", "refId": "A" }
+        { "expr": "sli:cart_consistency_rate:5m", "legendFormat": "Consistency", "refId": "A" }
       ]
     },
     {
@@ -112,14 +112,14 @@
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
       "id": 5,
       "panels": [],
-      "title": "ASGI Latency Profiles (p95 Targets)",
+      "title": "Latency Profiles p95",
       "type": "row"
     },
     {
       "id": 6,
       "gridPos": { "h": 7, "w": 5, "x": 0, "y": 6 },
       "type": "timeseries",
-      "title": "Cart Read Latency (p95) - GET /cart",
+      "title": "Cart Read - GET /cart",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
       "fieldConfig": {
@@ -135,14 +135,14 @@
         }
       },
       "targets": [
-        { "expr": "sli:cart_read_latency_p95:5m", "legendFormat": "p95 Cart Read", "refId": "A" }
+        { "expr": "sli:cart_read_latency_p95:5m", "legendFormat": "p95", "refId": "A" }
       ]
     },
     {
       "id": 7,
       "gridPos": { "h": 7, "w": 5, "x": 5, "y": 6 },
       "type": "timeseries",
-      "title": "Order Read Latency (p95) - GET /orders",
+      "title": "Order Read - GET /orders",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
       "fieldConfig": {
@@ -158,14 +158,14 @@
         }
       },
       "targets": [
-        { "expr": "sli:order_read_latency_p95:5m", "legendFormat": "p95 Order Read", "refId": "A" }
+        { "expr": "sli:order_read_latency_p95:5m", "legendFormat": "p95", "refId": "A" }
       ]
     },
     {
       "id": 8,
       "gridPos": { "h": 7, "w": 5, "x": 10, "y": 6 },
       "type": "timeseries",
-      "title": "Cart Update Latency (p95) - POST /cart/items",
+      "title": "Cart Update - POST /cart/items",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
       "fieldConfig": {
@@ -181,14 +181,14 @@
         }
       },
       "targets": [
-        { "expr": "sli:cart_update_latency_p95:5m", "legendFormat": "p95 Cart Update", "refId": "A" }
+        { "expr": "sli:cart_update_latency_p95:5m", "legendFormat": "p95", "refId": "A" }
       ]
     },
     {
       "id": 9,
       "gridPos": { "h": 7, "w": 5, "x": 15, "y": 6 },
       "type": "timeseries",
-      "title": "Checkout Latency (p95) - POST /checkout",
+      "title": "Checkout - POST /checkout",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
       "fieldConfig": {
@@ -204,14 +204,14 @@
         }
       },
       "targets": [
-        { "expr": "sli:checkout_latency_p95:5m", "legendFormat": "p95 Checkout", "refId": "A" }
+        { "expr": "sli:checkout_latency_p95:5m", "legendFormat": "p95", "refId": "A" }
       ]
     },
     {
       "id": 10,
       "gridPos": { "h": 7, "w": 4, "x": 20, "y": 6 },
       "type": "timeseries",
-      "title": "Auth Latency (p95) - POST /auth/login",
+      "title": "Auth - POST /auth/login",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
       "fieldConfig": {
@@ -227,7 +227,7 @@
         }
       },
       "targets": [
-        { "expr": "sli:auth_latency_p95:5m", "legendFormat": "p95 Auth", "refId": "A" }
+        { "expr": "sli:auth_latency_p95:5m", "legendFormat": "p95", "refId": "A" }
       ]
     },
     {
@@ -242,11 +242,12 @@
       "id": 12,
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 14 },
       "type": "stat",
-      "title": "Database Availability (pg_isready)",
+      "title": "Database Availability",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "options": {
         "colorMode": "thresholds",
-        "graphMode": "none",
+        "graphMode": "area",
+        "justifyMode": "center",
         "reduceOptions": { "calcs": ["lastNotNull"] }
       },
       "fieldConfig": {
@@ -259,7 +260,13 @@
             ]
           },
           "mappings": [
-            { "type": "value", "options": { "0": { "text": "Down", "color": "red" }, "1": { "text": "Up (Healthy)", "color": "green" } } }
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "Down", "color": "red", "index": 0 },
+                "1": { "text": "Up (Healthy)", "color": "green", "index": 1 }
+              }
+            }
           ]
         }
       },
@@ -291,32 +298,32 @@
         }
       },
       "targets": [
-        { "expr": "db_connections_active", "legendFormat": "Connections", "refId": "A" }
+        { "expr": "max(db_connections_active)", "legendFormat": "Connections", "refId": "A" }
       ]
     },
     {
       "id": 14,
       "gridPos": { "h": 6, "w": 12, "x": 0, "y": 18 },
       "type": "timeseries",
-      "title": "Container Memory Utilization",
+      "title": "Container Memory",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "bytes" } },
       "targets": [
-        { "expr": "app_process_resident_memory_bytes", "legendFormat": "RSS Consumption", "refId": "A" }
+        { "expr": "app_process_resident_memory_bytes", "legendFormat": "RSS", "refId": "A" }
       ]
     },
     {
       "id": 15,
       "gridPos": { "h": 6, "w": 12, "x": 12, "y": 18 },
       "type": "timeseries",
-      "title": "Container CPU Load",
+      "title": "Container CPU",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "short" } },
       "targets": [
-        { "expr": "rate(app_process_cpu_seconds_total[2m])", "legendFormat": "Active Cores", "refId": "A" }
+        { "expr": "rate(app_process_cpu_seconds_total[2m])", "legendFormat": "Cores", "refId": "A" }
       ]
     }
   ],
   "schemaVersion": 39,
-  "version": 6
+  "version": 9
 }

@@ -14,6 +14,9 @@ from app.core.error_handlers import (
     generic_exception_handler,
 )
 from app.core.health import health_endpoint
+from app.core.metrics import metrics_endpoint, collect_process_metrics, db_connections_active, db_available
+from app.core.middleware import RequestTrackingMiddleware
+from app.core.database import get_active_connection_count
 from app.features.auth.router import router as auth_router
 from app.features.cart.router import router as cart_router
 from app.features.checkout.router import router as checkout_router
@@ -40,6 +43,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(RequestTrackingMiddleware)
 
 app.add_exception_handler(HTTPException, app_http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
@@ -58,3 +62,18 @@ async def root():
 @app.get("/health")
 async def health(request: Request):
     return await health_endpoint(request)
+
+
+@app.get("/metrics")
+async def metrics():
+    collect_process_metrics()
+
+    try:
+        count = await get_active_connection_count()
+        db_connections_active.set(count)
+        db_available.set(1)
+    except Exception:
+        logger.warning("Failed to collect DB connection count")
+        db_available.set(0)
+
+    return await metrics_endpoint()

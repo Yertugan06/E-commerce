@@ -2,11 +2,10 @@ import time
 from collections.abc import Callable
 from functools import wraps
 
-from prometheus_client import Counter, Gauge, Histogram
+from prometheus_client import Counter, Gauge, Histogram, REGISTRY
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
 
-from app.core.config import settings
 
 http_requests_total = Counter(
     "http_requests_total",
@@ -16,9 +15,9 @@ http_requests_total = Counter(
 
 http_request_duration_seconds = Histogram(
     "http_request_duration_seconds",
-    "HTTP request duration in seconds by method and endpoint group",
-    labelnames=["method", "endpoint_group"],
-    buckets=(0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0),
+    "HTTP request duration in seconds by method and path",
+    labelnames=["method", "path"],
+    buckets=(0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0),
 )
 
 checkout_total = Counter(
@@ -31,12 +30,6 @@ checkout_duration_seconds = Histogram(
     "checkout_duration_seconds",
     "Checkout processing time in seconds",
     buckets=(0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0),
-)
-
-order_persistence_validations_total = Counter(
-    "order_persistence_validations_total",
-    "Order read-after-write validations by status",
-    labelnames=["status"],
 )
 
 cart_consistency_validations_total = Counter(
@@ -52,17 +45,15 @@ db_connections_active = Gauge(
     "Active PostgreSQL connections",
 )
 
+app_process_cpu_seconds_total = Gauge(
+    "app_process_cpu_seconds_total",
+    "Total user and system CPU time spent in seconds",
+)
 
-def get_endpoint_group(path: str, method: str) -> str:
-    if path.startswith("/auth"):
-        return "auth"
-    if path.startswith("/cart"):
-        return "cart"
-    if path.startswith("/checkout") or path.startswith("/orders"):
-        return "checkout"
-    if path == "/health":
-        return "health"
-    return "other"
+app_process_resident_memory_bytes = Gauge(
+    "app_process_resident_memory_bytes",
+    "Resident memory size in bytes",
+)
 
 
 def get_status_group(status_code: int) -> str:
@@ -79,25 +70,20 @@ def get_status_group(status_code: int) -> str:
     return "5xx"
 
 
-def track_request_duration(method: str, path: str, status_code: int, duration: float):
-    if not settings.SLI_ENABLED:
-        return
-    endpoint_group = get_endpoint_group(path, method)
+def track_request(method: str, path: str, status_code: int, duration: float):
     status_group = get_status_group(status_code)
-    http_requests_total.labels(method=method, path=endpoint_group, status_group=status_group).inc()
-    http_request_duration_seconds.labels(method=method, endpoint_group=endpoint_group).observe(duration)
+    http_requests_total.labels(method=method, path=path, status_group=status_group).inc()
+    http_request_duration_seconds.labels(method=method, path=path).observe(duration)
 
 
 async def metrics_endpoint() -> Response:
     return Response(
-        content=generate_latest(),
+        content=generate_latest(REGISTRY),
         media_type=CONTENT_TYPE_LATEST,
     )
 
 
 def track_checkout(status: str):
-    if not settings.SLI_ENABLED:
-        return
     checkout_total.labels(status=status).inc()
 
 
@@ -107,13 +93,22 @@ def track_checkout_duration(func: Callable) -> Callable:
         start = time.monotonic()
         try:
             result = await func(*args, **kwargs)
-            elapsed = time.monotonic() - start
-            if settings.SLI_ENABLED:
-                checkout_duration_seconds.observe(elapsed)
+            checkout_duration_seconds.observe(time.monotonic() - start)
             return result
         except Exception:
-            elapsed = time.monotonic() - start
-            if settings.SLI_ENABLED:
-                checkout_duration_seconds.observe(elapsed)
+            checkout_duration_seconds.observe(time.monotonic() - start)
             raise
     return wrapper
+
+
+def collect_process_metrics():
+    try:
+        import psutil
+        process = psutil.Process()
+        cpu_time = process.cpu_times()
+        app_process_cpu_seconds_total.set(cpu_time.user + cpu_time.system)
+        app_process_resident_memory_bytes.set(process.memory_info().rss)
+    except ImportError:
+        pass
+    except Exception:
+        pass
