@@ -16,7 +16,6 @@ env:
 
 jobs:
   deploy:
-    # Trigger if manually dispatched OR if the CI workflow completed successfully
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: self-hosted
     defaults:
