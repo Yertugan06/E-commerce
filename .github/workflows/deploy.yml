@@ -22,12 +22,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ">= 1.6"
-
-      # Using native PowerShell string manipulation safely manages Windows paths
       - name: Lowercase repository name
         shell: powershell
         run: |
