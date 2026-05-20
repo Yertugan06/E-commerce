@@ -313,3 +313,40 @@ resource "docker_container" "alertmanager" {
   depends_on = [docker_container.prometheus]
 }
 
+# ── Locust (load testing) ────────────────────────────────────────────────────
+
+resource "docker_container" "locust" {
+  name    = var.locust_container_name
+  image   = var.locust_image
+  restart = "unless-stopped"
+
+  networks_advanced {
+    name = docker_network.this.name
+  }
+
+  ports {
+    internal = 8089
+    external = var.locust_port_external
+  }
+
+  volumes {
+    container_path = "/mnt/locust/locustfile.py"
+    host_path      = abspath("${path.module}/../backend/scripts/locustfile.py")
+    read_only      = true
+  }
+
+  command = compact([
+    "-f",
+    "/mnt/locust/locustfile.py",
+    "--host=http://nginx:80",
+    "--web-host=${var.locust_web_host}",
+    "--web-port=8089",
+    var.locust_headless ? "--headless" : "",
+    var.locust_headless ? "--users=${var.locust_users}" : "",
+    var.locust_headless ? "--spawn-rate=${var.locust_spawn_rate}" : "",
+    var.locust_headless ? "--run-time=${var.locust_run_time}" : "",
+  ])
+
+  depends_on = [docker_container.nginx]
+}
+

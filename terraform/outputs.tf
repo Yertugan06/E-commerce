@@ -58,6 +58,15 @@ output "grafana" {
   sensitive = true
 }
 
+output "locust" {
+  description = "Locust load testing details"
+  value = {
+    container_name = docker_container.locust.name
+    url            = "http://localhost:${var.locust_port_external}"
+    headless       = var.locust_headless
+  }
+}
+
 output "alertmanager" {
   description = "Alertmanager details"
   value = {

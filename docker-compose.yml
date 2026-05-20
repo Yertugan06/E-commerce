@@ -104,7 +104,7 @@ services:
       - "--host=http://nginx:80"
       - "--web-host=0.0.0.0"
       - "--web-port=8089"
-      - "--headless"
+      #- "--headless"
       - "--users=10"
       - "--spawn-rate=2"
       - "--run-time=10m"

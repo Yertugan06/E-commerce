@@ -211,6 +211,56 @@ variable "alertmanager_port_external" {
   default     = 9093
 }
 
+# ── Locust (load testing) ────────────────────────────────────────────────────
+
+variable "locust_image" {
+  description = "Locust Docker image tag"
+  type        = string
+  default     = "locustio/locust:2.32.0"
+}
+
+variable "locust_container_name" {
+  description = "Name of the Locust container"
+  type        = string
+  default     = "ecommerce-locust"
+}
+
+variable "locust_port_external" {
+  description = "Host port mapped to Locust web UI (8089)"
+  type        = number
+  default     = 8089
+}
+
+variable "locust_web_host" {
+  description = "Locust web interface bind address"
+  type        = string
+  default     = "0.0.0.0"
+}
+
+variable "locust_headless" {
+  description = "Run Locust in headless mode (no web UI)"
+  type        = bool
+  default     = true
+}
+
+variable "locust_users" {
+  description = "Number of simulated users for load test"
+  type        = number
+  default     = 10
+}
+
+variable "locust_spawn_rate" {
+  description = "User spawn rate per second"
+  type        = number
+  default     = 2
+}
+
+variable "locust_run_time" {
+  description = "Load test duration (e.g. 10m, 30m, 1h)"
+  type        = string
+  default     = "10m"
+}
+
 # ── Registry / CI-CD overrides ──────────────────────────────────────────────
 
 variable "backend_image_registry_prefix" {
