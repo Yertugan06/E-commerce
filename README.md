@@ -107,6 +107,17 @@ Manual deploy from your machine:
 export GITHUB_REPOSITORY_OWNER=''; export GITHUB_REPOSITORY=''; bash scripts/deploy.sh
 ```
 
+ To deploy to K8s now:
+
+  # Start minikube
+  minikube start
+
+  # Deploy everything
+  bash scripts/deploy-k8s.sh
+
+  # Check HPA
+  kubectl get hpa -n ecommerce
+
 ### Run load tests
 
 ```bash
@@ -239,7 +250,8 @@ This script:
 4. Deploys PostgreSQL, waits for readiness
 5. Deploys backend with HPA
 6. Deploys nginx, frontend, monitoring stack (Prometheus, Alertmanager, Grafana), and Locust
-7. Runs Alembic migrations and seed data
+7. Deploys Prometheus RBAC (ServiceAccount + permissions for pod discovery)
+8. Runs Alembic migrations and seed data
 
 ### Access
 
@@ -262,6 +274,7 @@ This script:
 | `nginx.yaml` | Reverse proxy (NodePort 30080) |
 | `frontend.yaml` | Nginx-served React SPA |
 | `prometheus-config.yaml` | Prometheus config + all rule files |
+| `prometheus-rbac.yaml` | ServiceAccount, Role, RoleBinding for pod discovery |
 | `prometheus.yaml` | Prometheus deployment + PVC + NodePort |
 | `alertmanager.yaml` | Alertmanager deployment + NodePort |
 | `alert-receiver.yaml` | Webhook receiver for alert notifications |

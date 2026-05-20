@@ -42,6 +42,7 @@ echo "=== Deploying frontend ==="
 kubectl apply -f k8s/frontend.yaml
 
 echo "=== Deploying monitoring stack ==="
+kubectl apply -f k8s/prometheus-rbac.yaml
 kubectl apply -f k8s/prometheus-config.yaml
 kubectl apply -f k8s/prometheus.yaml
 kubectl apply -f k8s/alertmanager.yaml
