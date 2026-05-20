@@ -10,7 +10,7 @@ class TestAuthRegister:
             "/auth/register",
             json={"email": "new@example.com", "password": "testpass123"},
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         data = resp.json()
         assert "access_token" in data
         assert data["token_type"] == "bearer"

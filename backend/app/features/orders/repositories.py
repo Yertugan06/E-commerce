@@ -5,24 +5,22 @@ from app.features.orders.models import Order, OrderItem
 
 
 async def create_order_from_cart(
-    db: AsyncSession, user_id: int, cart_items: list[tuple[int, int, float]], total_amount: float = 0.0
+    db: AsyncSession, user_id: int, cart_items: list[tuple[int, int, float, str]], total_amount: float = 0.0
 ) -> Order:
     order = Order(user_id=user_id, total_amount=total_amount)
     db.add(order)
-    await db.commit()
-    await db.refresh(order)
+    await db.flush()
 
-    for product_id, quantity, unit_price in cart_items:
+    for product_id, quantity, unit_price, product_name in cart_items:
         item = OrderItem(
             order_id=order.id,
             product_id=product_id,
+            product_name=product_name,
             quantity=quantity,
             unit_price=unit_price,
         )
         db.add(item)
 
-    await db.commit()
-    await db.refresh(order)
     return order
 
 

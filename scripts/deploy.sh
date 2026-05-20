@@ -23,18 +23,12 @@ echo "=== Pulling latest images from $REGISTRY ==="
 docker pull "$REGISTRY/$REPO_OWNER/$REPO_NAME/ecommerce-backend:latest"
 docker pull "$REGISTRY/$REPO_OWNER/$REPO_NAME/ecommerce-frontend:latest"
 docker pull "$REGISTRY/$REPO_OWNER/$REPO_NAME/ecommerce-nginx:latest"
-docker pull "$REGISTRY/$REPO_OWNER/$REPO_NAME/ecommerce-autoscaler:latest"
 
 echo "=== Writing deploy.auto.tfvars ==="
 cat > terraform/deploy.auto.tfvars << EOF
 backend_image_registry_prefix    = "$REGISTRY/$REPO_OWNER/$REPO_NAME/"
 frontend_image_registry_prefix   = "$REGISTRY/$REPO_OWNER/$REPO_NAME/"
 nginx_image_registry_prefix      = "$REGISTRY/$REPO_OWNER/$REPO_NAME/"
-autoscaler_image_registry_prefix = "$REGISTRY/$REPO_OWNER/$REPO_NAME/"
-backend_image_tag     = "latest"
-frontend_image_tag    = "latest"
-nginx_image_tag       = "latest"
-autoscaler_image_tag  = "latest"
 EOF
 
 echo "=== Applying Terraform ==="

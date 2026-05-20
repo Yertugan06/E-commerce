@@ -32,6 +32,15 @@ def _compute_p95_seconds(metric_name: str, labels: dict[str, str] | None = None)
                         for k, v in labels.items():
                             if sample_labels.get(k) != v:
                                 break
+                        else:
+                            le = float(sample_labels.get("le", "+inf"))
+                            cumulative += sample.value
+                            if cumulative >= target:
+                                if cumulative == 0:
+                                    return prev_bound
+                                fraction = (target - (cumulative - sample.value)) / sample.value
+                                return prev_bound + (le - prev_bound) * fraction
+                            prev_bound = le
                     else:
                         le = float(sample_labels.get("le", "+inf"))
                         cumulative += sample.value
@@ -99,15 +108,12 @@ def aggregate_health_dashboard() -> dict:
 
     latency: dict[str, float | None] = {}
     latency["read_p95_ms"] = _compute_p95_seconds(
-        "http_request_duration_seconds", {"endpoint_group": "auth"}
+        "http_request_duration_seconds", {"method": "GET"}
     )
     latency["write_p95_ms"] = _compute_p95_seconds(
-        "http_request_duration_seconds", {"endpoint_group": "checkout"}
+        "http_request_duration_seconds", {"method": "POST"}
     )
-    latency["auth_p95_ms"] = _compute_p95_seconds(
-        "http_request_duration_seconds", {"endpoint_group": "auth"}
-    )
-    for key in ("read_p95_ms", "write_p95_ms", "auth_p95_ms"):
+    for key in ("read_p95_ms", "write_p95_ms"):
         if latency[key] is not None:
             latency[key] = round(latency[key] * 1000, 2)
     result["latency"] = latency if any(v is not None for v in latency.values()) else None
@@ -123,11 +129,11 @@ def aggregate_health_dashboard() -> dict:
     else:
         result["request_volume"] = None
 
-    checkout_by_status = _sum_counter_by_label("checkout_total", "status")
-    checkout_success = checkout_by_status.get("success", 0) if checkout_by_status else 0
-    checkout_failure = checkout_by_status.get("failure", 0) if checkout_by_status else 0
+    checkout_by_result = _sum_counter_by_label("checkout_total", "result")
+    checkout_success = checkout_by_result.get("success", 0) if checkout_by_result else 0
+    checkout_failure = sum(v for k, v in checkout_by_result.items() if k != "success") if checkout_by_result else 0
     checkout_total = checkout_success + checkout_failure
-    if checkout_by_status:
+    if checkout_by_result:
         result["checkout"] = {
             "success_rate": round(checkout_success / checkout_total, 4) if checkout_total > 0 else 0,
             "duration_p95_ms": (
@@ -135,9 +141,9 @@ def aggregate_health_dashboard() -> dict:
                 if (v := _compute_p95_seconds("checkout_duration_seconds")) is not None
                 else None
             ),
-            "by_status": {
+            "by_result": {
                 "success": int(checkout_success),
-                "failure": int(checkout_failure),
+                "other": int(checkout_failure),
             },
         }
     else:

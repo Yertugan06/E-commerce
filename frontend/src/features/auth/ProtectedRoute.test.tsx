@@ -19,7 +19,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('renders children when token exists', () => {
-    useAuthStore.setState({ token: 'valid-token', user: { id: '1', email: 'test@test.com' } });
+    useAuthStore.setState({ token: 'valid-token', user: { id: 1, email: 'test@test.com' } });
     render(
       <MemoryRouter initialEntries={['/protected']}>
         <ProtectedRoute />

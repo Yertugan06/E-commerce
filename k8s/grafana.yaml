@@ -1,0 +1,402 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-provisioning
+  namespace: ecommerce
+data:
+  prometheus.yml: |
+    apiVersion: 1
+
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+  dashboards.yml: |
+    apiVersion: 1
+
+    providers:
+      - name: "SLI Dashboards"
+        orgId: 1
+        folder: "SLIs"
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 30
+        options:
+          path: /etc/grafana/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: ecommerce
+data:
+  sli_overview.json: |
+    {
+      "title": "E-Commerce SLI Overview Dashboard",
+      "uid": "ecommerce-sli-overview",
+      "tags": ["sli", "production"],
+      "timezone": "browser",
+      "refresh": "5s",
+      "editable": true,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "id": 1,
+          "panels": [],
+          "title": "Core System SLIs",
+          "type": "row"
+        },
+        {
+          "id": 2,
+          "gridPos": { "h": 4, "w": 8, "x": 0, "y": 1 },
+          "type": "stat",
+          "title": "API Availability",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "options": {
+            "colorMode": "thresholds",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"] }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "yellow", "value": 0.99 },
+                  { "color": "green", "value": 0.999 }
+                ]
+              },
+              "min": 0,
+              "max": 1
+            }
+          },
+          "targets": [
+            { "expr": "sli:api_availability:ratio_5m", "legendFormat": "Availability", "refId": "A" }
+          ]
+        },
+        {
+          "id": 3,
+          "gridPos": { "h": 4, "w": 8, "x": 8, "y": 1 },
+          "type": "stat",
+          "title": "Checkout Success Rate",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "options": {
+            "colorMode": "thresholds",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"] }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "yellow", "value": 0.97 },
+                  { "color": "green", "value": 0.995 }
+                ]
+              },
+              "min": 0,
+              "max": 1
+            }
+          },
+          "targets": [
+            { "expr": "sli:checkout_success_rate:5m", "legendFormat": "Success Rate", "refId": "A" }
+          ]
+        },
+        {
+          "id": 4,
+          "gridPos": { "h": 4, "w": 8, "x": 16, "y": 1 },
+          "type": "stat",
+          "title": "Cart Consistency Rate",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "options": {
+            "colorMode": "thresholds",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"] }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "yellow", "value": 0.99 },
+                  { "color": "green", "value": 0.999 }
+                ]
+              },
+              "min": 0,
+              "max": 1
+            }
+          },
+          "targets": [
+            { "expr": "sli:cart_consistency_rate:5m", "legendFormat": "Consistency", "refId": "A" }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+          "id": 5,
+          "panels": [],
+          "title": "Latency Profiles p95",
+          "type": "row"
+        },
+        {
+          "id": 6,
+          "gridPos": { "h": 7, "w": 5, "x": 0, "y": 6 },
+          "type": "timeseries",
+          "title": "Cart Read - GET /cart",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 0.3 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            { "expr": "sli:cart_read_latency_p95:5m", "legendFormat": "p95", "refId": "A" }
+          ]
+        },
+        {
+          "id": 7,
+          "gridPos": { "h": 7, "w": 5, "x": 5, "y": 6 },
+          "type": "timeseries",
+          "title": "Order Read - GET /orders",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 0.5 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            { "expr": "sli:order_read_latency_p95:5m", "legendFormat": "p95", "refId": "A" }
+          ]
+        },
+        {
+          "id": 8,
+          "gridPos": { "h": 7, "w": 5, "x": 10, "y": 6 },
+          "type": "timeseries",
+          "title": "Cart Update - POST /cart/items",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 0.5 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            { "expr": "sli:cart_update_latency_p95:5m", "legendFormat": "p95", "refId": "A" }
+          ]
+        },
+        {
+          "id": 9,
+          "gridPos": { "h": 7, "w": 5, "x": 15, "y": 6 },
+          "type": "timeseries",
+          "title": "Checkout - POST /checkout",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 2.0 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            { "expr": "sli:checkout_latency_p95:5m", "legendFormat": "p95", "refId": "A" }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+          "id": 11,
+          "panels": [],
+          "title": "Operations",
+          "type": "row"
+        },
+        {
+          "id": 12,
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 14 },
+          "type": "stat",
+          "title": "Database Availability",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "options": {
+            "colorMode": "thresholds",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "reduceOptions": { "calcs": ["lastNotNull"] }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              },
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": { "text": "Down", "color": "red", "index": 0 },
+                    "1": { "text": "Up (Healthy)", "color": "green", "index": 1 }
+                  }
+                }
+              ]
+            }
+          },
+          "targets": [
+            { "expr": "max(db_available)", "refId": "A" }
+          ]
+        },
+        {
+          "id": 13,
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 14 },
+          "type": "stat",
+          "title": "Active DB Connections",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "options": {
+            "colorMode": "thresholds",
+            "graphMode": "area",
+            "reduceOptions": { "calcs": ["lastNotNull"] }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 40 },
+                  { "color": "red", "value": 75 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            { "expr": "max(db_connections_active)", "legendFormat": "Connections", "refId": "A" }
+          ]
+        },
+        {
+          "id": 14,
+          "gridPos": { "h": 6, "w": 12, "x": 0, "y": 18 },
+          "type": "timeseries",
+          "title": "Container Memory",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "unit": "bytes" } },
+          "targets": [
+            { "expr": "app_process_resident_memory_bytes", "legendFormat": "RSS", "refId": "A" }
+          ]
+        },
+        {
+          "id": 15,
+          "gridPos": { "h": 6, "w": 12, "x": 12, "y": 18 },
+          "type": "timeseries",
+          "title": "Container CPU",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "unit": "short" } },
+          "targets": [
+            { "expr": "rate(app_process_cpu_seconds_total[2m])", "legendFormat": "Cores", "refId": "A" }
+          ]
+        }
+      ],
+      "schemaVersion": 39,
+      "version": 9
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: ecommerce
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:11.1.0
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: admin
+          volumeMounts:
+            - name: provisioning-datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: provisioning-dashboards
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboards
+              mountPath: /etc/grafana/dashboards
+      volumes:
+        - name: provisioning-datasources
+          configMap:
+            name: grafana-provisioning
+            items:
+              - key: prometheus.yml
+                path: prometheus.yml
+        - name: provisioning-dashboards
+          configMap:
+            name: grafana-provisioning
+            items:
+              - key: dashboards.yml
+                path: dashboards.yml
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: ecommerce
+spec:
+  type: NodePort
+  selector:
+    app: grafana
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 33000

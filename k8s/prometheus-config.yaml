@@ -1,0 +1,219 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: ecommerce
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets: ["alertmanager:9093"]
+
+    rule_files:
+      - /etc/prometheus/rules/*.yml
+
+    scrape_configs:
+      - job_name: "ecommerce-backend"
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            regex: backend
+            action: keep
+          - source_labels: [__address__]
+            regex: (.+):(\d+)
+            replacement: "${1}:8000"
+            target_label: __address__
+  sli_recording.yml: |
+    groups:
+      - name: sli_backend
+        interval: 15s
+        rules:
+          - record: sli:api_availability:ratio_5m
+            expr: |
+              (
+                (
+                  clamp_min(
+                    (1 - (
+                      sum(rate(http_requests_total{job="ecommerce-backend",status_group="5xx"}[5m])) or vector(0)
+                      /
+                      sum(rate(http_requests_total{job="ecommerce-backend"}[5m]))
+                    )),
+                    0
+                  )
+                ) and on() up{job="ecommerce-backend"} == 1
+              )
+              or
+              (
+                count by () (up{job="ecommerce-backend"} == 0) * 0
+              )
+          - record: sli:checkout_success_rate:5m
+            expr: |
+              (
+                (
+                  clamp_min(
+                    (1 - (
+                      sum(rate(checkout_total{job="ecommerce-backend",status="failure"}[5m])) or vector(0)
+                      /
+                      sum(rate(checkout_total{job="ecommerce-backend"}[5m]))
+                    )),
+                    0
+                  )
+                ) and on() up{job="ecommerce-backend"} == 1
+              )
+              or
+              (
+                count by () (up{job="ecommerce-backend"} == 0) * 0
+              )
+          - record: sli:cart_read_latency_p95:5m
+            expr: |
+              histogram_quantile(0.95,
+                sum(rate(http_request_duration_seconds_bucket{job="ecommerce-backend",path="/cart"}[5m])) by (le)
+              )
+          - record: sli:order_read_latency_p95:5m
+            expr: |
+              histogram_quantile(0.95,
+                sum(rate(http_request_duration_seconds_bucket{job="ecommerce-backend",path="/orders"}[5m])) by (le)
+              )
+          - record: sli:cart_update_latency_p95:5m
+            expr: |
+              histogram_quantile(0.95,
+                sum(rate(http_request_duration_seconds_bucket{job="ecommerce-backend",path="/cart/items"}[5m])) by (le)
+              )
+          - record: sli:checkout_latency_p95:5m
+            expr: |
+              histogram_quantile(0.95,
+                sum(rate(http_request_duration_seconds_bucket{job="ecommerce-backend",path="/checkout"}[5m])) by (le)
+              )
+          - record: sli:cart_consistency_rate:5m
+            expr: |
+              (
+                (
+                  clamp_min(
+                    (1 - (
+                      sum(rate(cart_consistency_validations_total{job="ecommerce-backend",status="failure"}[5m])) or vector(0)
+                      /
+                      sum(rate(cart_consistency_validations_total{job="ecommerce-backend"}[5m]))
+                    )),
+                    0
+                  )
+                ) and on() up{job="ecommerce-backend"} == 1
+              )
+              or
+              (
+                count by () (up{job="ecommerce-backend"} == 0) * 0
+              )
+  sli_alerts.yml: |
+    groups:
+      - name: sli_alerts
+        interval: 15s
+        rules:
+          - alert: APIAvailabilityLow
+            expr: sli:api_availability:ratio_5m < 0.999
+            for: 5m
+            labels:
+              severity: critical
+              sli: api_availability
+            annotations:
+              summary: "API availability is below 99.9% (currently {{ $value | humanizePercentage }})"
+              description: "The proportion of non-5xx responses over the last 5 minutes has dropped below 99.9%."
+          - alert: NoTraffic
+            expr: up{job="ecommerce-backend"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              sli: api_availability
+            annotations:
+              summary: "No traffic detected — backend may be down"
+              description: "The backend scrape target has been unreachable for over 1 minute."
+          - alert: DatabaseDown
+            expr: db_available == 0
+            for: 1m
+            labels:
+              severity: critical
+              sli: database_availability
+            annotations:
+              summary: "PostgreSQL is unreachable"
+              description: "The database health check has failed for over 1 minute."
+          - alert: CartReadLatencyHigh
+            expr: sli:cart_read_latency_p95:5m > 0.3
+            for: 5m
+            labels:
+              severity: warning
+              sli: cart_read_latency
+            annotations:
+              summary: "Cart read latency p95 exceeds 300ms"
+          - alert: OrderReadLatencyHigh
+            expr: sli:order_read_latency_p95:5m > 0.5
+            for: 5m
+            labels:
+              severity: warning
+              sli: order_read_latency
+            annotations:
+              summary: "Order read latency p95 exceeds 500ms"
+          - alert: CartUpdateLatencyHigh
+            expr: sli:cart_update_latency_p95:5m > 0.5
+            for: 5m
+            labels:
+              severity: warning
+              sli: cart_update_latency
+            annotations:
+              summary: "Cart update latency p95 exceeds 500ms"
+          - alert: CheckoutLatencyHigh
+            expr: sli:checkout_latency_p95:5m > 2.0
+            for: 5m
+            labels:
+              severity: warning
+              sli: checkout_latency
+            annotations:
+              summary: "Checkout latency p95 exceeds 2000ms"
+          - alert: CheckoutSuccessRateLow
+            expr: sli:checkout_success_rate:5m < 0.995
+            for: 5m
+            labels:
+              severity: critical
+              sli: checkout_success_rate
+            annotations:
+              summary: "Checkout success rate below 99.5%"
+          - alert: CartConsistencyRateLow
+            expr: sli:cart_consistency_rate:5m < 0.999
+            for: 5m
+            labels:
+              severity: warning
+              sli: cart_consistency_rate
+            annotations:
+              summary: "Cart consistency rate below 99.9%"
+  docker_capacity.yml: |
+    groups:
+      - name: docker-capacity
+        interval: 15s
+        rules:
+          - alert: CPUUtilizationHigh
+            expr: rate(app_process_cpu_seconds_total[5m]) > 0.8
+            for: 5m
+            labels:
+              severity: warning
+              sli: capacity
+            annotations:
+              summary: "Backend CPU utilization exceeds 0.8 cores"
+          - alert: MemoryUtilizationHigh
+            expr: app_process_resident_memory_bytes > 500 * 1024 * 1024
+            for: 5m
+            labels:
+              severity: warning
+              sli: capacity
+            annotations:
+              summary: "Backend memory usage exceeds 500 MB"
+          - alert: ErrorRateHigh
+            expr: rate(http_requests_total{status_group="5xx"}[5m]) / rate(http_requests_total[5m]) > 0.05
+            for: 5m
+            labels:
+              severity: critical
+              sli: capacity
+            annotations:
+              summary: "Backend 5xx error rate exceeds 5%"

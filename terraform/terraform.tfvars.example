@@ -24,16 +24,6 @@ prometheus_port_external = 9090
 grafana_port_external   = 3000
 grafana_admin_password  = "admin"
 
-# Auto-Scaler
-autoscaler_min_replicas          = 1
-autoscaler_max_replicas          = 5
-autoscaler_scale_up_threshold    = 0.70
-autoscaler_scale_down_threshold  = 0.30
-autoscaler_cooldown_seconds      = 60
-autoscaler_p95_latency_threshold = 1.0
-autoscaler_request_rate_threshold = 50
-autoscaler_poll_interval         = 15
-
 # ── Registry overrides (for CI/CD deploys only) ────────────────────────────
 # When these are set, Terraform pulls pre-built images from the registry
 # instead of building locally. Overridden by deploy.auto.tfvars on deploy.
@@ -42,4 +32,3 @@ autoscaler_poll_interval         = 15
 # backend_image_tag              = "latest"
 # frontend_image_tag             = "latest"
 # nginx_image_registry_prefix    = "ghcr.io/myorg/myrepo/"
-# autoscaler_image_registry_prefix = "ghcr.io/myorg/myrepo/"

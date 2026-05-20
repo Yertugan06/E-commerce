@@ -1,15 +1,16 @@
 import { create } from 'zustand';
 import client from '../../shared/api/client';
 
-interface OrderItem {
+export interface OrderItem {
   id: number;
   order_id: number;
   product_id: number;
+  product_name: string;
   quantity: number;
   unit_price: number;
 }
 
-interface Order {
+export interface Order {
   id: number;
   user_id: number;
   status: string;
@@ -31,8 +32,13 @@ export const useOrdersStore = create<OrdersState>((set) => ({
   loading: false,
 
   checkout: async () => {
-    const res = await client.post<Order>('/checkout');
-    return res.data;
+    set({ loading: true });
+    try {
+      const res = await client.post<Order>('/checkout');
+      return res.data;
+    } finally {
+      set({ loading: false });
+    }
   },
 
   fetchOrders: async () => {
@@ -40,6 +46,8 @@ export const useOrdersStore = create<OrdersState>((set) => ({
     try {
       const res = await client.get<Order[]>('/orders');
       set({ orders: res.data });
+    } catch {
+      set({ orders: [] });
     } finally {
       set({ loading: false });
     }

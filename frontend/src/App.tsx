@@ -20,8 +20,8 @@ function App() {
           <Route index element={<Home />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="products" element={<Products />} />
           <Route element={<ProtectedRoute />}>
-            <Route path="products" element={<Products />} />
             <Route path="cart" element={<CartPage />} />
             <Route path="checkout" element={<CheckoutPage />} />
             <Route path="checkout/success/:orderId" element={<CheckoutSuccess />} />

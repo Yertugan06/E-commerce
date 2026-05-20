@@ -13,13 +13,6 @@ async def app_http_exception_handler(request: Request, exc: HTTPException) -> JS
     )
 
 
-async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"message": exc.detail, "error_code": "HTTP_ERROR"},
-    )
-
-
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     errors = []
     for err in exc.errors():

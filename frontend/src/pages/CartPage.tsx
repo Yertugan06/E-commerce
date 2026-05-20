@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../entities/cart/store';
 
@@ -20,7 +20,7 @@ export function CartSummary() {
       </h3>
       <div className="card" style={{ padding: 0 }}>
         {items.map((item) => {
-          const subtotal = item.quantity * (item.unit_price || 19.99);
+          const subtotal = item.quantity * item.unit_price;
           return (
             <div key={item.id} className="cart-item" style={{ padding: '16px 20px' }}>
               <div className="cart-item-image">
@@ -31,8 +31,8 @@ export function CartSummary() {
                 </svg>
               </div>
               <div className="cart-item-info">
-                <h4>Product #{item.product_id}</h4>
-                <p>${(item.unit_price || 19.99).toFixed(2)} each</p>
+                <h4>{item.product_name || `Product #${item.product_id}`}</h4>
+                <p>${item.unit_price.toFixed(2)} each</p>
               </div>
               <div className="cart-item-quantity">
                 <button
@@ -70,13 +70,31 @@ export function CartSummary() {
 }
 
 export function CartPage() {
-  const { items, loading, fetchCart } = useCartStore();
+  const { items, loading, error, fetchCart } = useCartStore();
   const navigate = useNavigate();
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
+
+  if (error) {
+    return (
+      <div className="page">
+        <div className="empty-state">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <h2>Something went wrong</h2>
+          <p>{error}</p>
+          <button className="btn-primary" onClick={() => fetchCart()}>
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!loading && items.length === 0) {
     return (
@@ -95,17 +113,12 @@ export function CartPage() {
     );
   }
 
-  const subtotal = items.reduce((sum, item) => sum + item.quantity * (item.unit_price || 19.99), 0);
-  const shipping = subtotal > 0 ? 0 : 0;
+  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+  const shipping = 0;
   const total = subtotal + shipping;
 
-  const handleCheckout = async () => {
-    setCheckoutLoading(true);
-    try {
-      navigate('/checkout');
-    } finally {
-      setCheckoutLoading(false);
-    }
+  const handleCheckout = () => {
+    navigate('/checkout');
   };
 
   return (
@@ -134,9 +147,8 @@ export function CartPage() {
             <button
               className="btn-primary"
               onClick={handleCheckout}
-              disabled={checkoutLoading}
             >
-              {checkoutLoading ? 'Redirecting...' : 'Proceed to Checkout'}
+              Proceed to Checkout
             </button>
           </div>
         </div>

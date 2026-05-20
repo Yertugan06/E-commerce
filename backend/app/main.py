@@ -20,7 +20,9 @@ from app.core.database import get_active_connection_count
 from app.features.auth.router import router as auth_router
 from app.features.cart.router import router as cart_router
 from app.features.checkout.router import router as checkout_router
+from app.features.products.router import router as products_router
 from app.features.users.models import User
+from app.features.products.models import Product
 from app.features.cart.models import Cart, CartItem
 from app.features.orders.models import Order, OrderItem
 
@@ -52,6 +54,7 @@ app.add_exception_handler(Exception, generic_exception_handler)
 app.include_router(auth_router)
 app.include_router(cart_router)
 app.include_router(checkout_router)
+app.include_router(products_router)
 
 
 @app.get("/")

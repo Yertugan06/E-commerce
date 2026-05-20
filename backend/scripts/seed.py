@@ -5,6 +5,7 @@ from app.core.database import engine
 from app.core.security import get_password_hash
 from app.features.cart.models import Cart, CartItem
 from app.features.orders.models import Order, OrderItem
+from app.features.products.models import Product
 from app.features.users.domain import UserRole
 from app.features.users.models import User
 
@@ -36,6 +37,21 @@ async def seed():
         await db.refresh(alice)
         await db.refresh(bob)
 
+        products = [
+            Product(name="Wireless Mouse", price=29.99, stock=50),
+            Product(name="Mechanical Keyboard", price=89.99, stock=30),
+            Product(name="USB-C Hub", price=34.99, stock=40),
+            Product(name="27\" Monitor", price=299.99, stock=15),
+            Product(name="Webcam 1080p", price=59.99, stock=25),
+            Product(name="Desk Lamp", price=24.99, stock=60),
+            Product(name="Noise Canceling Headphones", price=149.99, stock=20),
+            Product(name="Laptop Stand", price=39.99, stock=35),
+        ]
+        db.add_all(products)
+        await db.flush()
+        for p in products:
+            await db.refresh(p)
+
         alice_cart = Cart(user_id=alice.id)
         bob_cart = Cart(user_id=bob.id)
         db.add_all([alice_cart, bob_cart])
@@ -44,19 +60,19 @@ async def seed():
         await db.refresh(bob_cart)
 
         db.add_all([
-            CartItem(cart_id=alice_cart.id, product_id=101, quantity=2),
-            CartItem(cart_id=alice_cart.id, product_id=102, quantity=1),
-            CartItem(cart_id=bob_cart.id, product_id=201, quantity=3),
+            CartItem(cart_id=alice_cart.id, product_id=products[0].id, quantity=2),
+            CartItem(cart_id=alice_cart.id, product_id=products[1].id, quantity=1),
+            CartItem(cart_id=bob_cart.id, product_id=products[2].id, quantity=3),
         ])
 
-        order = Order(user_id=alice.id, total_amount=49.99)
+        order = Order(user_id=alice.id, total_amount=149.97)
         db.add(order)
         await db.flush()
         await db.refresh(order)
 
         db.add_all([
-            OrderItem(order_id=order.id, product_id=101, quantity=1, unit_price=19.99),
-            OrderItem(order_id=order.id, product_id=103, quantity=2, unit_price=15.00),
+            OrderItem(order_id=order.id, product_id=products[0].id, quantity=1, unit_price=29.99),
+            OrderItem(order_id=order.id, product_id=products[3].id, quantity=1, unit_price=299.99),
         ])
 
         await db.commit()

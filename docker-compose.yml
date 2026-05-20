@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:15-alpine@sha256:df7bca0066e6f60cc3dd32faa70caddec20e2c22b58932f79498e5704b23854a
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
@@ -39,18 +39,30 @@ services:
       - backend
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000
     restart: unless-stopped
     ports:
-      - "5173:5173"
-    environment:
-      VITE_API_URL: http://localhost:8000
+      - "5173:80"
     depends_on:
       - nginx
 
 
+  alert-receiver:
+    image: python:3.11-slim@sha256:9a7765b36773a37061455b332f18e265e7f58f6fea9c419a550d2a8b0e9db834
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/webhook-receiver.py:/app/webhook-receiver.py:ro
+    command:
+      - python
+      - /app/webhook-receiver.py
+    depends_on:
+      - prometheus
+
   alertmanager:
-    image: prom/alertmanager:v0.27.0
+    image: prom/alertmanager:v0.27.0@sha256:e13b6ed5cb929eeaee733479dce55e10eb3bc2e9c4586c705a4e8da41e5eacf5
     restart: unless-stopped
     ports:
       - "9093:9093"
@@ -63,7 +75,7 @@ services:
       - prometheus
 
   prometheus:
-    image: prom/prometheus:v2.53.0
+    image: prom/prometheus:v2.53.0@sha256:075b1ba2c4ebb04bc3a6ab86c06ec8d8099f8fda1c96ef6d104d9bb1def1d8bc
     restart: unless-stopped
     ports:
       - "9090:9090"
@@ -74,11 +86,13 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+      - "--alertmanager.timeout=30s"
     depends_on:
       - backend
 
   grafana:
-    image: grafana/grafana:11.1.0
+    image: grafana/grafana:11.1.0@sha256:079600c9517b678c10cda6006b4487d3174512fd4c6cface37df7822756ed7a5
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -87,7 +101,7 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
     depends_on:
       - prometheus
 

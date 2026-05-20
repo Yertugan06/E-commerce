@@ -9,6 +9,7 @@ class OrderItemRead(BaseModel):
     id: int
     order_id: int
     product_id: int
+    product_name: str
     quantity: int
     unit_price: float
 

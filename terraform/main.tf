@@ -95,6 +95,14 @@ resource "docker_container" "backend" {
     "ACCESS_TOKEN_EXPIRE_MINUTES=${var.backend_access_token_expire_minutes}",
   ]
 
+  healthcheck {
+    test         = ["CMD", "python", "-c", "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status == 200 else 1)"]
+    interval     = "10s"
+    timeout      = "5s"
+    retries      = 3
+    start_period = "30s"
+  }
+
   depends_on = [docker_container.postgres]
 }
 
@@ -204,6 +212,8 @@ resource "docker_container" "prometheus" {
   command = [
     "--config.file=/etc/prometheus/prometheus.yml",
     "--storage.tsdb.path=/prometheus",
+    "--web.enable-lifecycle",
+    "--alertmanager.timeout=30s",
   ]
 
   depends_on = [docker_container.backend]
@@ -241,10 +251,34 @@ resource "docker_container" "grafana" {
   }
 
   volumes {
-    container_path = "/var/lib/grafana/dashboards"
+    container_path = "/etc/grafana/dashboards"
     host_path      = abspath("${path.module}/../grafana/dashboards")
     read_only      = true
   }
+
+  depends_on = [docker_container.prometheus]
+}
+
+# ── Alert Receiver (webhook logger) ─────────────────────────────────────────
+
+resource "docker_container" "alert_receiver" {
+  name    = var.alert_receiver_container_name
+  image   = var.alert_receiver_image
+  restart = "unless-stopped"
+
+  networks_advanced {
+    name = docker_network.this.name
+  }
+
+  volumes {
+    container_path = "/app/webhook-receiver.py"
+    host_path      = abspath("${path.module}/../prometheus/webhook-receiver.py")
+    read_only      = true
+  }
+
+  command = [
+    "python", "/app/webhook-receiver.py",
+  ]
 
   depends_on = [docker_container.prometheus]
 }

@@ -14,7 +14,9 @@ class CartItemRead(BaseModel):
     id: int
     cart_id: int
     product_id: int
+    product_name: str
     quantity: int
+    unit_price: float
 
 
 class CartRead(BaseModel):

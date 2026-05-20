@@ -45,23 +45,23 @@ export function Layout() {
             >
               Storefront
             </Link>
-            <Link
-              to="/products"
-              style={{
-                padding: '8px 16px',
-                fontWeight: 500,
-                fontSize: 15,
-                color: '#94A3B8',
-                borderRadius: 6,
-              }}
-            >
-              Products
-            </Link>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             {user && (
               <>
+                <Link
+                  to="/products"
+                  style={{
+                    padding: '8px 16px',
+                    fontWeight: 500,
+                    fontSize: 15,
+                    color: '#94A3B8',
+                    borderRadius: 6,
+                  }}
+                >
+                  Products
+                </Link>
                 <Link
                   to="/cart"
                   style={{
@@ -97,6 +97,18 @@ export function Layout() {
             )}
             {!user && (
               <>
+                <Link
+                  to="/products"
+                  style={{
+                    padding: '8px 16px',
+                    fontWeight: 500,
+                    fontSize: 15,
+                    color: '#94A3B8',
+                    borderRadius: 6,
+                  }}
+                >
+                  Products
+                </Link>
                 <Link
                   to="/login"
                   style={{

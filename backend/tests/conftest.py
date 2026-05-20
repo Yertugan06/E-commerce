@@ -3,8 +3,11 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.pool import NullPool
 
+from sqlalchemy import text
+
 from app.core.config import settings
 from app.core.database import SQLModel, get_session
+from app.features.products.models import Product
 from app.main import app
 
 test_engine = create_async_engine(
@@ -19,6 +22,12 @@ async def setup_database():
     async with test_engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
         await conn.run_sync(SQLModel.metadata.create_all)
+
+    async with AsyncSession(test_engine) as session:
+        for i in range(1, 200):
+            session.add(Product(id=i, name=f"Product {i}", price=10.0, stock=100))
+        await session.commit()
+        await session.execute(text("SELECT setval('products_id_seq', 199)"))
 
     async def override_get_session():
         async with AsyncSession(test_engine) as session:

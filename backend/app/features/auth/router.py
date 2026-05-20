@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, status
 
 from app.core.dependencies import DBSessionDep, CurrentUserDep
 from app.features.auth.schemas import RegisterRequest, LoginRequest, TokenResponse
@@ -8,7 +8,7 @@ from app.features.users.schemas import UserRead
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=TokenResponse)
+@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 async def register(body: RegisterRequest, db: DBSessionDep):
     return await register_user(db, body)
 

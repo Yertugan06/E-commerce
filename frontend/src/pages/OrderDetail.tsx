@@ -1,21 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useOrdersStore } from '../entities/orders/store';
-
-interface OrderItem {
-  id: number;
-  product_id: number;
-  quantity: number;
-  unit_price: number;
-}
-
-interface Order {
-  id: number;
-  status: string;
-  total_amount: number;
-  created_at: string;
-  items: OrderItem[];
-}
+import type { Order } from '../entities/orders/store';
 
 export function OrderDetail() {
   const { orderId } = useParams();
@@ -47,9 +33,9 @@ export function OrderDetail() {
       <p>Total: ${order.total_amount.toFixed(2)}</p>
       <h3>Items</h3>
       <ul>
-        {order.items.map((item) => (
+        {(order.items ?? []).map((item) => (
           <li key={item.id}>
-            Product #{item.product_id} &times; {item.quantity} @ ${item.unit_price.toFixed(2)}
+            {item.product_name || `Product #${item.product_id}`} &times; {item.quantity} @ ${item.unit_price.toFixed(2)}
           </li>
         ))}
       </ul>

@@ -25,7 +25,8 @@ class OrderItem(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     order_id: int = Field(nullable=False, foreign_key="orders.id")
-    product_id: int = Field(nullable=False)
+    product_id: int = Field(nullable=False, foreign_key="products.id")
+    product_name: str = Field(default="", nullable=False)
     quantity: int = Field(nullable=False)
     unit_price: float = Field(default=0.0, nullable=False)
 

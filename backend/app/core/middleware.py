@@ -21,18 +21,22 @@ class RequestTrackingMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
         except Exception:
             elapsed = time.monotonic() - start
+            route = request.scope.get("route")
+            path = route.path if route else request.url.path
             track_request(
                 method=request.method,
-                path=request.url.path,
+                path=path,
                 status_code=500,
                 duration=elapsed,
             )
             raise
 
         elapsed = time.monotonic() - start
+        route = request.scope.get("route")
+        path = route.path if route else request.url.path
         track_request(
             method=request.method,
-            path=request.url.path,
+            path=path,
             status_code=response.status_code,
             duration=elapsed,
         )

@@ -208,29 +208,6 @@
       ]
     },
     {
-      "id": 10,
-      "gridPos": { "h": 7, "w": 4, "x": 20, "y": 6 },
-      "type": "timeseries",
-      "title": "Auth - POST /auth/login",
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table" } },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1.0 }
-            ]
-          }
-        }
-      },
-      "targets": [
-        { "expr": "sli:auth_latency_p95:5m", "legendFormat": "p95", "refId": "A" }
-      ]
-    },
-    {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
       "id": 11,
@@ -305,7 +282,7 @@
       "id": 14,
       "gridPos": { "h": 6, "w": 12, "x": 0, "y": 18 },
       "type": "timeseries",
-      "title": "Container Memory",
+      "title": "Process Memory",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "bytes" } },
       "targets": [
@@ -316,7 +293,7 @@
       "id": 15,
       "gridPos": { "h": 6, "w": 12, "x": 12, "y": 18 },
       "type": "timeseries",
-      "title": "Container CPU",
+      "title": "Process CPU",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "short" } },
       "targets": [

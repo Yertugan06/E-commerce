@@ -11,7 +11,7 @@ variable "network_name" {
 variable "postgres_image" {
   description = "PostgreSQL Docker image tag"
   type        = string
-  default     = "postgres:15-alpine"
+  default     = "postgres:15-alpine@sha256:df7bca0066e6f60cc3dd32faa70caddec20e2c22b58932f79498e5704b23854a"
 }
 
 variable "postgres_container_name" {
@@ -135,7 +135,7 @@ variable "nginx_port_external" {
 variable "prometheus_image" {
   description = "Prometheus Docker image tag"
   type        = string
-  default     = "prom/prometheus:v2.53.0"
+  default     = "prom/prometheus:v2.53.0@sha256:075b1ba2c4ebb04bc3a6ab86c06ec8d8099f8fda1c96ef6d104d9bb1def1d8bc"
 }
 
 variable "prometheus_container_name" {
@@ -155,7 +155,7 @@ variable "prometheus_port_external" {
 variable "grafana_image" {
   description = "Grafana Docker image tag"
   type        = string
-  default     = "grafana/grafana:11.1.0"
+  default     = "grafana/grafana:11.1.0@sha256:079600c9517b678c10cda6006b4487d3174512fd4c6cface37df7822756ed7a5"
 }
 
 variable "grafana_container_name" {
@@ -177,12 +177,26 @@ variable "grafana_admin_password" {
   default     = "admin"
 }
 
+# ── Alert Receiver (webhook logger) ──────────────────────────────────────────
+
+variable "alert_receiver_image" {
+  description = "Docker image for the alert webhook receiver (python:3.11-slim)"
+  type        = string
+  default     = "python:3.11-slim@sha256:9a7765b36773a37061455b332f18e265e7f58f6fea9c419a550d2a8b0e9db834"
+}
+
+variable "alert_receiver_container_name" {
+  description = "Name of the alert webhook receiver container"
+  type        = string
+  default     = "ecommerce-alert-receiver"
+}
+
 # ── Alertmanager ─────────────────────────────────────────────────────────────
 
 variable "alertmanager_image" {
   description = "Alertmanager Docker image tag"
   type        = string
-  default     = "prom/alertmanager:v0.27.0"
+  default     = "prom/alertmanager:v0.27.0@sha256:e13b6ed5cb929eeaee733479dce55e10eb3bc2e9c4586c705a4e8da41e5eacf5"
 }
 
 variable "alertmanager_container_name" {

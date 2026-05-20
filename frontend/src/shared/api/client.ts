@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '../../entities/auth/store';
 
 const client = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
@@ -15,9 +16,8 @@ client.interceptors.request.use((config) => {
 client.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+    if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login')) {
+      useAuthStore.getState().logout();
       window.location.href = '/login';
     }
     return Promise.reject(error);

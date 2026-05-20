@@ -10,6 +10,7 @@ export function RegisterForm() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,33 +19,38 @@ export function RegisterForm() {
       setError('Passwords do not match');
       return;
     }
+    setSubmitting(true);
     try {
       const res = await client.post('/auth/register', { email, password });
       login(res.data.access_token, res.data.user);
-      navigate('/');
+      navigate('/products');
     } catch (err: unknown) {
       const data = (err as { response?: { data?: { message?: string; detail?: string } } })?.response?.data;
       setError(data?.message || data?.detail || 'Registration failed');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <h2>Register</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p style={{ color: '#F87171', background: '#1E1E1E', padding: '8px 12px', borderRadius: 4 }}>{error}</p>}
       <div>
-        <label>Email</label>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <label htmlFor="email">Email</label>
+        <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
       </div>
       <div>
-        <label>Password</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <label htmlFor="password">Password</label>
+        <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
       </div>
       <div>
-        <label>Confirm Password</label>
-        <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
+        <label htmlFor="confirm">Confirm Password</label>
+        <input id="confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
       </div>
-      <button type="submit" className="btn-primary">Register</button>
+      <button type="submit" className="btn-primary" disabled={submitting}>
+        {submitting ? 'Registering...' : 'Register'}
+      </button>
     </form>
   );
 }

@@ -22,14 +22,20 @@ http_request_duration_seconds = Histogram(
 
 checkout_total = Counter(
     "checkout_total",
-    "Checkout requests by status",
-    labelnames=["status"],
+    "Checkout requests by result",
+    labelnames=["result"],
 )
 
 checkout_duration_seconds = Histogram(
     "checkout_duration_seconds",
     "Checkout processing time in seconds",
     buckets=(0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0),
+)
+
+order_persistence_validations_total = Counter(
+    "order_persistence_validations_total",
+    "Order persistence validations by status",
+    labelnames=["status"],
 )
 
 cart_consistency_validations_total = Counter(
@@ -83,8 +89,8 @@ async def metrics_endpoint() -> Response:
     )
 
 
-def track_checkout(status: str):
-    checkout_total.labels(status=status).inc()
+def track_checkout(result: str):
+    checkout_total.labels(result=result).inc()
 
 
 def track_checkout_duration(func: Callable) -> Callable:

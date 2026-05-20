@@ -12,6 +12,16 @@ groups:
           summary: "API availability is below 99.9% (currently {{ $value | humanizePercentage }})"
           description: "The proportion of non-5xx responses over the last 5 minutes has dropped below 99.9%."
 
+      - alert: NoTraffic
+        expr: up{job="ecommerce-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          sli: api_availability
+        annotations:
+          summary: "No traffic detected — backend may be down"
+          description: "The backend scrape target has been unreachable for over 1 minute."
+
       - alert: DatabaseDown
         expr: db_available == 0
         for: 1m
@@ -61,16 +71,6 @@ groups:
         annotations:
           summary: "Checkout latency p95 exceeds 2000ms (currently {{ $value | humanizeDuration }})"
           description: "POST /checkout p95 latency has been above 2000ms for 5 minutes."
-
-      - alert: AuthLatencyHigh
-        expr: sli:auth_latency_p95:5m > 1.0
-        for: 5m
-        labels:
-          severity: warning
-          sli: auth_latency
-        annotations:
-          summary: "Auth latency p95 exceeds 1000ms (currently {{ $value | humanizeDuration }})"
-          description: "POST /auth/login p95 latency has been above 1000ms for 5 minutes."
 
       - alert: CheckoutSuccessRateLow
         expr: sli:checkout_success_rate:5m < 0.995

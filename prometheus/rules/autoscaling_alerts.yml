@@ -1,31 +1,33 @@
 groups:
-  - name: k8s-autoscaling
+  - name: docker-capacity
     interval: 15s
     rules:
-      - alert: K8sHPAMaxReplicasReached
-        expr: kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler="backend-hpa"} == kube_horizontalpodautoscaler_spec_max_replicas{horizontalpodautoscaler="backend-hpa"}
+      - alert: CPUUtilizationHigh
+        expr: rate(app_process_cpu_seconds_total[5m]) > 0.8
         for: 5m
         labels:
           severity: warning
-          sli: autoscaling_capacity
+          sli: capacity
         annotations:
-          summary: "HPA {{ $labels.horizontalpodautoscaler }} at maximum capacity"
-          description: "The HPA has reached its maximum configured replicas ({{ $value }}) for 5 minutes. The cluster may not be able to handle further load spikes."
+          summary: "Backend CPU utilization exceeds 0.8 cores (currently {{ $value | humanizePercentage }})"
+          description: "The backend process has been using more than 0.8 CPU cores for 5 minutes. Consider adding replicas or increasing CPU allocation."
 
-      - alert: K8sHPAFailedToScale
-        expr: kube_horizontalpodautoscaler_status_condition{condition="AbleToScale", status="false"} == 1
-        for: 2m
+      - alert: MemoryUtilizationHigh
+        expr: app_process_resident_memory_bytes > 500 * 1024 * 1024
+        for: 5m
+        labels:
+          severity: warning
+          sli: capacity
+        annotations:
+          summary: "Backend memory usage exceeds 500 MB (currently {{ $value | humanize1024 }})"
+          description: "The backend process RSS has been above 500 MB for 5 minutes. Consider adding replicas or increasing memory limits."
+
+      - alert: ErrorRateHigh
+        expr: rate(http_requests_total{status_group="5xx"}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 5m
         labels:
           severity: critical
+          sli: capacity
         annotations:
-          summary: "HPA {{ $labels.horizontalpodautoscaler }} is unable to scale"
-          description: "The Kubernetes HPA controller is reporting that it cannot scale the deployment. Check cluster events and permissions."
-
-      - alert: K8sHPAMetricsMissing
-        expr: kube_horizontalpodautoscaler_status_condition{condition="ScalingActive", status="false"} == 1
-        for: 2m
-        labels:
-          severity: critical
-        annotations:
-          summary: "HPA {{ $labels.horizontalpodautoscaler }} is missing metrics"
-          description: "The HPA cannot fetch utilization metrics to make scaling decisions. Auto-scaling is effectively frozen."
+          summary: "Backend 5xx error rate exceeds 5% (currently {{ $value | humanizePercentage }})"
+          description: "More than 5% of HTTP requests are returning 5xx errors. The backend may be overwhelmed or experiencing a bug."

@@ -42,3 +42,4 @@ terraform/terraform.tfvars
 .kilo
 .pytest_cache
 actions-runner/
+.aider*

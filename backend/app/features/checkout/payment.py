@@ -1,2 +1,2 @@
-def process_payment(amount: float) -> bool:
+async def process_payment(amount: float) -> bool:
     return True

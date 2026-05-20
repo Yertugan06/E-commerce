@@ -5,7 +5,7 @@ import { useOrdersStore } from '../entities/orders/store';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
-  const { items, fetchCart } = useCartStore();
+  const { items, loading: cartLoading, fetchCart, clearCart } = useCartStore();
   const { checkout } = useOrdersStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -19,6 +19,7 @@ export function CheckoutPage() {
     setError('');
     try {
       const order = await checkout();
+      clearCart();
       navigate(`/checkout/success/${order.id}`);
     } catch (err: unknown) {
       const data = (err as { response?: { data?: { message?: string; detail?: string } } })?.response?.data;
@@ -27,6 +28,14 @@ export function CheckoutPage() {
       setLoading(false);
     }
   };
+
+  if (cartLoading) {
+    return (
+      <div className="page" style={{ textAlign: 'center', paddingTop: 48, color: '#94A3B8' }}>
+        Loading cart...
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -42,7 +51,7 @@ export function CheckoutPage() {
     );
   }
 
-  const total = items.reduce((sum, item) => sum + item.quantity * (item.unit_price || 19.99), 0);
+  const total = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
 
   return (
     <div className="page">
@@ -64,11 +73,11 @@ export function CheckoutPage() {
                   </svg>
                 </div>
                 <div className="cart-item-info">
-                  <h4>Product #{item.product_id}</h4>
-                  <p>${(item.unit_price || 19.99).toFixed(2)} &times; {item.quantity}</p>
+                  <h4>{item.product_name || `Product #${item.product_id}`}</h4>
+                  <p>${(item.unit_price ?? 0).toFixed(2)} &times; {item.quantity}</p>
                 </div>
                 <div className="cart-item-subtotal">
-                  ${(item.quantity * (item.unit_price || 19.99)).toFixed(2)}
+                  ${(item.quantity * (item.unit_price ?? 0)).toFixed(2)}
                 </div>
               </div>
             ))}
