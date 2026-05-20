@@ -31,3 +31,13 @@ groups:
         annotations:
           summary: "Backend 5xx error rate exceeds 5% (currently {{ $value | humanizePercentage }})"
           description: "More than 5% of HTTP requests are returning 5xx errors. The backend may be overwhelmed or experiencing a bug."
+
+      - alert: RequestRateHigh
+        expr: rate(http_requests_total[1m]) > 100
+        for: 2m
+        labels:
+          severity: warning
+          sli: capacity
+        annotations:
+          summary: "High request rate detected ({{ $value | humanizePercentage }})"
+          description: "The backend is receiving more than 100 requests per second on average over the last minute. Consider scaling up."

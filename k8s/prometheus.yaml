@@ -55,8 +55,8 @@ spec:
                 path: sli_recording.yml
               - key: sli_alerts.yml
                 path: sli_alerts.yml
-              - key: docker_capacity.yml
-                path: docker_capacity.yml
+              - key: autoscaling_alerts.yml
+                path: autoscaling_alerts.yml
         - name: data
           persistentVolumeClaim:
             claimName: prometheus-pvc

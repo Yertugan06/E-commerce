@@ -6,8 +6,8 @@ metadata:
 data:
   prometheus.yml: |
     global:
-      scrape_interval: 15s
-      evaluation_interval: 15s
+      scrape_interval: 5s
+      evaluation_interval: 5s
 
     alerting:
       alertmanagers:
@@ -32,82 +32,54 @@ data:
   sli_recording.yml: |
     groups:
       - name: sli_backend
-        interval: 15s
+        interval: 5s
         rules:
           - record: sli:api_availability:ratio_5m
             expr: |
-              (
+              1 - (
                 (
-                  clamp_min(
-                    (1 - (
-                      sum(rate(http_requests_total{job="ecommerce-backend",status_group="5xx"}[5m])) or vector(0)
-                      /
-                      sum(rate(http_requests_total{job="ecommerce-backend"}[5m]))
-                    )),
-                    0
-                  )
-                ) and on() up{job="ecommerce-backend"} == 1
+                  sum(increase(http_requests_total{job="ecommerce-backend",status_group="5xx"}[5m]))
+                  or vector(0)
+                )
+                /
+                clamp_min(sum(increase(http_requests_total{job="ecommerce-backend"}[5m])), 0.0001)
               )
-              or
-              (
-                count by () (up{job="ecommerce-backend"} == 0) * 0
-              )
+
           - record: sli:checkout_success_rate:5m
             expr: |
-              (
-                (
-                  clamp_min(
-                    (1 - (
-                      sum(rate(checkout_total{job="ecommerce-backend",status="failure"}[5m])) or vector(0)
-                      /
-                      sum(rate(checkout_total{job="ecommerce-backend"}[5m]))
-                    )),
-                    0
-                  )
-                ) and on() up{job="ecommerce-backend"} == 1
-              )
-              or
-              (
-                count by () (up{job="ecommerce-backend"} == 0) * 0
-              )
+              sum(increase(http_requests_total{job="ecommerce-backend",path="/checkout",status_group="2xx"}[5m]))
+              /
+              clamp_min(sum(increase(http_requests_total{job="ecommerce-backend",path="/checkout"}[5m])), 0.0001)
+
           - record: sli:cart_read_latency_p95:5m
             expr: |
               histogram_quantile(0.95,
                 sum(rate(http_request_duration_seconds_bucket{job="ecommerce-backend",path="/cart"}[5m])) by (le)
               )
+
           - record: sli:order_read_latency_p95:5m
             expr: |
               histogram_quantile(0.95,
-                sum(rate(http_request_duration_seconds_bucket{job="ecommerce-backend",path="/orders"}[5m])) by (le)
+                sum(rate(http_request_duration_seconds_bucket{job="ecommerce-backend",path=~"/orders(/.*)?"}[5m])) by (le)
               )
+
           - record: sli:cart_update_latency_p95:5m
             expr: |
               histogram_quantile(0.95,
-                sum(rate(http_request_duration_seconds_bucket{job="ecommerce-backend",path="/cart/items"}[5m])) by (le)
+                sum(rate(http_request_duration_seconds_bucket{job="ecommerce-backend",path=~"/cart/items(/.*)?"}[5m])) by (le)
               )
+
           - record: sli:checkout_latency_p95:5m
             expr: |
               histogram_quantile(0.95,
                 sum(rate(http_request_duration_seconds_bucket{job="ecommerce-backend",path="/checkout"}[5m])) by (le)
               )
+
           - record: sli:cart_consistency_rate:5m
             expr: |
-              (
-                (
-                  clamp_min(
-                    (1 - (
-                      sum(rate(cart_consistency_validations_total{job="ecommerce-backend",status="failure"}[5m])) or vector(0)
-                      /
-                      sum(rate(cart_consistency_validations_total{job="ecommerce-backend"}[5m]))
-                    )),
-                    0
-                  )
-                ) and on() up{job="ecommerce-backend"} == 1
-              )
-              or
-              (
-                count by () (up{job="ecommerce-backend"} == 0) * 0
-              )
+              sum(increase(cart_consistency_validations_total{job="ecommerce-backend",status="success"}[5m]))
+              /
+              clamp_min(sum(increase(cart_consistency_validations_total{job="ecommerce-backend"}[5m])), 0.0001)
   sli_alerts.yml: |
     groups:
       - name: sli_alerts
@@ -122,6 +94,7 @@ data:
             annotations:
               summary: "API availability is below 99.9% (currently {{ $value | humanizePercentage }})"
               description: "The proportion of non-5xx responses over the last 5 minutes has dropped below 99.9%."
+
           - alert: NoTraffic
             expr: up{job="ecommerce-backend"} == 0
             for: 1m
@@ -131,6 +104,7 @@ data:
             annotations:
               summary: "No traffic detected — backend may be down"
               description: "The backend scrape target has been unreachable for over 1 minute."
+
           - alert: DatabaseDown
             expr: db_available == 0
             for: 1m
@@ -140,6 +114,7 @@ data:
             annotations:
               summary: "PostgreSQL is unreachable"
               description: "The database health check has failed for over 1 minute."
+
           - alert: CartReadLatencyHigh
             expr: sli:cart_read_latency_p95:5m > 0.3
             for: 5m
@@ -147,7 +122,9 @@ data:
               severity: warning
               sli: cart_read_latency
             annotations:
-              summary: "Cart read latency p95 exceeds 300ms"
+              summary: "Cart read latency p95 exceeds 300ms (currently {{ $value | humanizeDuration }})"
+              description: "GET /cart p95 latency has been above 300ms for 5 minutes."
+
           - alert: OrderReadLatencyHigh
             expr: sli:order_read_latency_p95:5m > 0.5
             for: 5m
@@ -155,7 +132,9 @@ data:
               severity: warning
               sli: order_read_latency
             annotations:
-              summary: "Order read latency p95 exceeds 500ms"
+              summary: "Order read latency p95 exceeds 500ms (currently {{ $value | humanizeDuration }})"
+              description: "GET /orders p95 latency has been above 500ms for 5 minutes."
+
           - alert: CartUpdateLatencyHigh
             expr: sli:cart_update_latency_p95:5m > 0.5
             for: 5m
@@ -163,7 +142,9 @@ data:
               severity: warning
               sli: cart_update_latency
             annotations:
-              summary: "Cart update latency p95 exceeds 500ms"
+              summary: "Cart update latency p95 exceeds 500ms (currently {{ $value | humanizeDuration }})"
+              description: "POST /cart/items p95 latency has been above 500ms for 5 minutes."
+
           - alert: CheckoutLatencyHigh
             expr: sli:checkout_latency_p95:5m > 2.0
             for: 5m
@@ -171,7 +152,9 @@ data:
               severity: warning
               sli: checkout_latency
             annotations:
-              summary: "Checkout latency p95 exceeds 2000ms"
+              summary: "Checkout latency p95 exceeds 2000ms (currently {{ $value | humanizeDuration }})"
+              description: "POST /checkout p95 latency has been above 2000ms for 5 minutes."
+
           - alert: CheckoutSuccessRateLow
             expr: sli:checkout_success_rate:5m < 0.995
             for: 5m
@@ -179,7 +162,9 @@ data:
               severity: critical
               sli: checkout_success_rate
             annotations:
-              summary: "Checkout success rate below 99.5%"
+              summary: "Checkout success rate below 99.5% (currently {{ $value | humanizePercentage }})"
+              description: "The proportion of successful POST /checkout responses has been below 99.5% for 5 minutes."
+
           - alert: CartConsistencyRateLow
             expr: sli:cart_consistency_rate:5m < 0.999
             for: 5m
@@ -187,10 +172,11 @@ data:
               severity: warning
               sli: cart_consistency_rate
             annotations:
-              summary: "Cart consistency rate below 99.9%"
-  docker_capacity.yml: |
+              summary: "Cart consistency rate below 99.9% (currently {{ $value | humanizePercentage }})"
+              description: "Cart consistency validation success rate has been below 99.9% for 5 minutes."
+  autoscaling_alerts.yml: |
     groups:
-      - name: docker-capacity
+      - name: autoscaling
         interval: 15s
         rules:
           - alert: CPUUtilizationHigh
@@ -200,7 +186,9 @@ data:
               severity: warning
               sli: capacity
             annotations:
-              summary: "Backend CPU utilization exceeds 0.8 cores"
+              summary: "Backend CPU utilization exceeds 0.8 cores (currently {{ $value | humanizePercentage }})"
+              description: "The backend process has been using more than 0.8 CPU cores for 5 minutes. Consider adding replicas or increasing CPU allocation."
+
           - alert: MemoryUtilizationHigh
             expr: app_process_resident_memory_bytes > 500 * 1024 * 1024
             for: 5m
@@ -208,7 +196,9 @@ data:
               severity: warning
               sli: capacity
             annotations:
-              summary: "Backend memory usage exceeds 500 MB"
+              summary: "Backend memory usage exceeds 500 MB (currently {{ $value | humanize1024 }})"
+              description: "The backend process RSS has been above 500 MB for 5 minutes. Consider adding replicas or increasing memory limits."
+
           - alert: ErrorRateHigh
             expr: rate(http_requests_total{status_group="5xx"}[5m]) / rate(http_requests_total[5m]) > 0.05
             for: 5m
@@ -216,4 +206,15 @@ data:
               severity: critical
               sli: capacity
             annotations:
-              summary: "Backend 5xx error rate exceeds 5%"
+              summary: "Backend 5xx error rate exceeds 5% (currently {{ $value | humanizePercentage }})"
+              description: "More than 5% of HTTP requests are returning 5xx errors. The backend may be overwhelmed or experiencing a bug."
+
+          - alert: RequestRateHigh
+            expr: rate(http_requests_total[1m]) > 100
+            for: 2m
+            labels:
+              severity: warning
+              sli: capacity
+            annotations:
+              summary: "High request rate detected ({{ $value | humanizePercentage }})"
+              description: "The backend is receiving more than 100 requests per second on average over the last minute. Consider scaling up."

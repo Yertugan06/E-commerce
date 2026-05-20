@@ -48,6 +48,10 @@ kubectl apply -f k8s/alertmanager.yaml
 kubectl apply -f k8s/alert-receiver.yaml
 kubectl apply -f k8s/grafana.yaml
 
+echo "=== Deploying locust ==="
+kubectl apply -f k8s/locust-config.yaml
+kubectl apply -f k8s/locust.yaml
+
 echo "=== Running alembic migrations and seed ==="
 POD=$(kubectl get pod --namespace=ecommerce -l app=backend -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
 if [ -n "$POD" ]; then
