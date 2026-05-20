@@ -60,6 +60,74 @@ bun install
 bun run dev
 ```
 
+## Usage Guide
+
+### Run everything locally (Docker)
+
+```bash
+docker compose up --build
+```
+
+Access:
+- **App:** http://localhost:8000
+- **Frontend:** http://localhost:5173
+- **Prometheus:** http://localhost:9090
+- **Grafana:** http://localhost:3000 (admin/admin)
+- **Alertmanager:** http://localhost:9093
+- **Locust (load test):** http://localhost:8089
+
+Stop with `Ctrl+C` or `docker compose down`.
+
+### Run in Kubernetes (minikube)
+
+```bash
+# Start minikube
+minikube start
+
+# Deploy everything
+bash scripts/deploy-k8s.sh
+
+# Check status
+kubectl get pods -n ecommerce
+kubectl get hpa -n ecommerce
+
+# Access
+minikube service list -n ecommerce
+```
+
+### Run CI/CD (requires self-hosted runner)
+
+The CI pipeline runs automatically on push/PR to `main`. To set up the self-hosted runner for deploy:
+1. Add a self-hosted runner in repo **Settings → Actions → Runners** (label: `laptop`)
+2. Push to `main` — CI builds images, then Deploy starts containers via Terraform
+
+Manual deploy from your machine:
+
+```bash
+export GITHUB_REPOSITORY_OWNER=''; export GITHUB_REPOSITORY=''; bash scripts/deploy.sh
+```
+
+### Run load tests
+
+```bash
+# With Docker (headless, 10 users for 10 minutes)
+docker compose up locust
+
+# Or with web UI: edit docker-compose.yml, remove --headless, then:
+docker compose up locust
+# Open http://localhost:8089
+```
+
+### Run tests
+
+```bash
+# Backend
+cd backend && uv run pytest -v
+
+# Frontend
+cd frontend && bun run test
+```
+
 ---
 
 ## Monitoring Stack
@@ -208,25 +276,84 @@ This script:
 ```
 ├── backend/
 │   ├── app/
-│   │   ├── core/               # Config, security, DB, middleware, metrics, SLI checks
-│   │   ├── features/           # auth, cart, checkout, orders, users, products
-│   │   └── main.py             # FastAPI app entry point
-│   ├── alembic/                # DB migrations
+│   │   ├── core/
+│   │   │   ├── config.py           # App settings, env vars
+│   │   │   ├── database.py         # SQLAlchemy async engine
+│   │   │   ├── dependencies.py     # FastAPI dependency injection
+│   │   │   ├── error_handlers.py   # Global exception handlers
+│   │   │   ├── exceptions.py       # Custom exception classes
+│   │   │   ├── health.py           # Health check endpoint
+│   │   │   ├── metrics.py          # Prometheus counters/histograms
+│   │   │   ├── metrics_aggregator.py
+│   │   │   ├── middleware.py       # Request metrics middleware
+│   │   │   ├── security.py         # JWT helpers
+│   │   │   └── sli_checks.py       # Business logic SLI validations
+│   │   ├── features/
+│   │   │   ├── auth/               # JWT register/login
+│   │   │   ├── cart/               # Cart CRUD with product validation
+│   │   │   ├── checkout/           # Order checkout flow + payment stubs
+│   │   │   ├── orders/             # Order history + detail
+│   │   │   ├── products/           # Product catalog CRUD
+│   │   │   └── users/              # User management
+│   │   └── main.py                 # FastAPI app entry point
+│   ├── alembic/                    # DB migrations
 │   ├── scripts/
-│   │   ├── seed.py             # Database seed data
-│   │   ├── locustfile.py       # Load testing scenarios
-│   │   └── generate_sli_traffic.py  # SLI traffic generator
+│   │   ├── generate_sli_traffic.py # SLI traffic generator
+│   │   ├── locustfile.py           # Load testing scenarios
+│   │   └── seed.py                 # Database seed data
+│   ├── tests/
+│   │   ├── conftest.py             # Test fixtures (async DB, client)
+│   │   ├── test_auth.py
+│   │   ├── test_cart.py
+│   │   ├── test_checkout.py
+│   │   └── test_sli.py
 │   ├── Dockerfile
 │   └── pyproject.toml
 ├── frontend/
 │   ├── src/
-│   │   ├── entities/           # Business entities (auth, cart, orders)
-│   │   ├── features/           # Feature components
-│   │   ├── pages/              # Page components
-│   │   ├── shared/             # Shared UI, API client
-│   │   └── widgets/            # Reusable widgets
+│   │   ├── entities/
+│   │   │   ├── auth/
+│   │   │   │   ├── store.ts        # Zustand auth store
+│   │   │   │   └── store.test.ts
+│   │   │   ├── cart/
+│   │   │   │   └── store.ts        # Zustand cart store
+│   │   │   └── orders/
+│   │   │       └── store.ts        # Zustand orders store
+│   │   ├── features/
+│   │   │   └── auth/
+│   │   │       ├── LoginForm.tsx
+│   │   │       ├── LoginForm.test.tsx
+│   │   │       ├── RegisterForm.tsx
+│   │   │       ├── ProtectedRoute.tsx
+│   │   │       └── ProtectedRoute.test.tsx
+│   │   ├── pages/
+│   │   │   ├── CartPage.tsx
+│   │   │   ├── CheckoutPage.tsx
+│   │   │   ├── CheckoutSuccess.tsx
+│   │   │   ├── Home.tsx
+│   │   │   ├── Login.tsx
+│   │   │   ├── OrderDetail.tsx
+│   │   │   ├── OrderHistory.tsx
+│   │   │   ├── Products.tsx
+│   │   │   └── Register.tsx
+│   │   ├── shared/
+│   │   │   ├── api/
+│   │   │   │   └── client.ts       # Axios instance + auth interceptor
+│   │   │   └── ui/
+│   │   │       └── Layout.tsx      # App shell with nav
+│   │   ├── widgets/
+│   │   │   └── cart/
+│   │   │       └── QuantitySelector.tsx
+│   │   ├── test/
+│   │   │   └── setup.ts            # Vitest test setup
+│   │   ├── App.tsx                 # Route definitions
+│   │   ├── main.tsx                # Entry point
+│   │   └── index.css               # Tailwind imports
+│   ├── nginx.conf                  # SPA nginx config
 │   ├── Dockerfile
-│   └── package.json
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── vitest.config.ts
 ├── k8s/                        # Kubernetes manifests
 │   ├── backend.yaml
 │   ├── backend-hpa.yaml
@@ -246,38 +373,49 @@ This script:
 │   ├── prometheus.yml           # Scrape config
 │   ├── alertmanager.yml         # Alert routing
 │   ├── webhook-receiver.py      # Alert notification webhook
-│   ├── rules/
-│   │   ├── sli_recording.yml    # SLI recording rules
-│   │   ├── sli_alerts.yml       # SLO alert rules
-│   │   └── autoscaling_alerts.yml  # Capacity alert rules
-│   └── dashboards/              # Grafana dashboard JSON
+│   └── rules/
+│       ├── sli_recording.yml    # SLI recording rules
+│       ├── sli_alerts.yml       # SLO alert rules
+│       └── autoscaling_alerts.yml  # Capacity alert rules
 ├── grafana/
-│   ├── provisioning/            # Datasource & dashboard provisioning
-│   └── dashboards/              # Pre-built dashboard definitions
+│   ├── dashboards/
+│   │   └── sli_overview.json    # SLI dashboard
+│   └── provisioning/
+│       ├── dashboards/
+│       │   └── dashboards.yml
+│       └── datasources/
+│           └── prometheus.yml
 ├── nginx/
-│   └── nginx.conf               # Reverse proxy config
+│   ├── nginx.conf               # Reverse proxy config
+│   └── Dockerfile
 ├── scripts/
 │   ├── deploy.sh                # Terraform-based deploy
 │   └── deploy-k8s.sh            # Minikube deploy
-├── terraform/                   # Infrastructure as Code
+├── terraform/                   # Infrastructure as Code (Docker provider)
 ├── docs/
 │   ├── SLOs.md                  # Full SLO definitions
 │   └── agent/                   # Deep-dive documentation
 │       ├── auth_flow.md
-│       ├── database_schema.md
 │       ├── checkout_state.md
-│       └── frontend_state.md
-└── docker-compose.yml           # Full stack with monitoring + load testing
+│       ├── database_schema.md
+│       ├── frontend_state.md
+│       └── repo_map_guidelines.md
+├── .env.example                 # Root environment variables
+├── AGENTS.md                    # Repository conventions
+├── docker-compose.yml           # Full stack with monitoring + load testing
+└── REPO_MAP.md                  # Repository map
 ```
 
 ## Documentation
 
 - `AGENTS.md` — Repository conventions, tooling, and architectural boundaries
+- `REPO_MAP.md` — Repository map and codebase navigation
 - `docs/SLOs.md` — SLO definitions, targets, and measurement methodology
 - `docs/agent/auth_flow.md` — JWT authentication flow (register, login, token verification)
 - `docs/agent/database_schema.md` — All SQLModel tables, relationships, and indexes
 - `docs/agent/checkout_state.md` — Checkout flow, order status lifecycle, stock locking
 - `docs/agent/frontend_state.md` — Zustand stores, API client, data flow patterns
+- `docs/agent/repo_map_guidelines.md` — Guidelines for maintaining the repo map
 
 ## CI/CD
 
@@ -285,15 +423,15 @@ This script:
 
 | Pipeline | Trigger | Runner | Action |
 |---|---|---|---|
-| **CI** | Push/PR → main | GitHub-hosted | Test, lint, build & push Docker images to GHCR |
-| **Deploy** | CI success on main | Self-hosted (`laptop`) | Pull latest images, `terraform apply` |
-| **Terraform Plan** | PR touching `terraform/` | GitHub-hosted | `terraform plan` as PR comment |
+| **CI** | Push/PR → main | GitHub-hosted | Backend tests, frontend tests + lint, build & push images to GHCR |
+| **Deploy** | CI success on main (or manual dispatch) | Self-hosted (`laptop`) | Pull latest images from GHCR, `terraform apply` |
+| **Terraform Plan** | PR touching `terraform/` | Self-hosted | `terraform validate`, `terraform plan` |
 
 ### Workflows
 
-- **`.github/workflows/ci.yml`** — Backend tests (PostgreSQL service container), frontend tests + lint, Docker build & push to GHCR.
-- **`.github/workflows/deploy.yml`** — Pulls `:latest` images from GHCR and runs `terraform apply` via the self-hosted runner.
-- **`.github/workflows/terraform-plan.yml`** — Validates and plans Terraform changes on PRs.
+- **`.github/workflows/ci.yml`** — Backend tests (PostgreSQL service container), frontend tests + lint, Docker build & push to GHCR (backend, frontend, nginx images).
+- **`.github/workflows/deploy.yml`** — Triggered by CI completion on main or `workflow_dispatch`. Pulls `:latest` images from GHCR and runs `terraform apply -auto-approve` on the self-hosted runner.
+- **`.github/workflows/terraform-plan.yml`** — Triggered on PRs touching `terraform/`. Runs `terraform validate` and `terraform plan` on the self-hosted runner.
 
 ### Self-hosted Runner Setup (Laptop)
 
@@ -306,44 +444,36 @@ This script:
 
 | Secret | Purpose |
 |---|---|
-| `TFE_TOKEN` | HCP Terraform API token — used by both the GitHub-hosted runner (`terraform-plan.yml`) and the self-hosted runner (`deploy.yml`) to authenticate with the remote state backend |
+| `GITHUB_TOKEN` | Built-in token — used for GHCR authentication in CI and Deploy workflows |
 
 ### Self-hosted Runner Security
 
-Deploy is only triggered on `push` to `main` (via `workflow_run` on CI). It will **not** trigger on PRs from forks, preventing untrusted code from reaching the self-hosted runner.
+Deploy is triggered via `workflow_run` on CI completion (push to `main`) or manually via `workflow_dispatch`. It will **not** trigger on PRs from forks, preventing untrusted code from reaching the self-hosted runner.
 
-### Terraform Remote State
+### Terraform
 
-Terraform state is stored remotely in [HCP Terraform](https://app.terraform.io) under the organization **my-ecommerce-org** in the **ecommerce-production** workspace. This provides:
+Terraform uses the **kreuzwerker/docker** provider to manage Docker containers directly (no cloud infrastructure). State is stored **locally** in `terraform/terraform.tfstate`.
 
-- **State locking** — prevents concurrent modifications
-- **Run history** — full audit trail of all infrastructure changes
-- **Remote execution** — plans and applies can run in HCP's infrastructure
-
-To set up local access:
+To run Terraform locally:
 
 ```bash
-# Interactive (recommended)
 cd terraform
-terraform login
-
-# Headless
-export TFE_TOKEN="<your-hcp-api-token>"
-terraform -chdir=terraform init   # migrates local state to HCP
+terraform init
+terraform apply
 ```
 
 ### Manual Deploy (Fallback)
 
 ```bash
-# Requires Docker, Terraform, and HCP Terraform token locally
-GITHUB_REPOSITORY_OWNER=myuser TFE_TOKEN=$(cat ~/.terraform.d/credentials.tfrc.json | jq -r '.credentials."app.terraform.io".token') ./scripts/deploy.sh
+# Pulls images from GHCR and deploys via Terraform
+GITHUB_REPOSITORY_OWNER=myuser ./scripts/deploy.sh
 ```
 
 ## Environment Variables
 
 | Variable | Default | Service | Description |
 |----------|---------|---------|-------------|
-| `DATABASE_URL` | `postgresql+asyncpg://...` | Backend | PostgreSQL connection string |
+| `DATABASE_URL` | `postgresql+asyncpg://postgres:postgres@localhost:5433/ecommerce` | Backend | PostgreSQL connection string |
 | `SECRET_KEY` | `change-me-to-a-random-secret-key` | Backend | JWT signing key |
 | `ALGORITHM` | `HS256` | Backend | JWT algorithm |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `30` | Backend | JWT expiry |

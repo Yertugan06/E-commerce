@@ -11,14 +11,6 @@ if [ -z "$REPO_OWNER" ]; then
   exit 1
 fi
 
-if [ -z "${TFE_TOKEN:-}" ]; then
-  echo "Error: TFE_TOKEN is not set."
-  echo "Usage: GITHUB_REPOSITORY_OWNER=myuser TFE_TOKEN=<token> ./scripts/deploy.sh"
-  echo ""
-  echo "Tip: export TFE_TOKEN=\$(cat ~/.terraform.d/credentials.tfrc.json | jq -r '.credentials.\"app.terraform.io\".token')"
-  exit 1
-fi
-
 echo "=== Pulling latest images from $REGISTRY ==="
 docker pull "$REGISTRY/$REPO_OWNER/$REPO_NAME/ecommerce-backend:latest"
 docker pull "$REGISTRY/$REPO_OWNER/$REPO_NAME/ecommerce-frontend:latest"
@@ -30,6 +22,14 @@ backend_image_registry_prefix    = "$REGISTRY/$REPO_OWNER/$REPO_NAME/"
 frontend_image_registry_prefix   = "$REGISTRY/$REPO_OWNER/$REPO_NAME/"
 nginx_image_registry_prefix      = "$REGISTRY/$REPO_OWNER/$REPO_NAME/"
 EOF
+
+if ! command -v terraform &>/dev/null; then
+  echo "Error: terraform is not installed or not in PATH."
+  echo ""
+  echo "Install it from: https://developer.hashicorp.com/terraform/install"
+  echo "Or use 'docker compose up --build' for local development instead."
+  exit 1
+fi
 
 echo "=== Applying Terraform ==="
 terraform -chdir=terraform init -reconfigure
