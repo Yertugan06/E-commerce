@@ -27,14 +27,28 @@ COOLDOWN_DOWN = 120       # seconds — slow to scale back, avoids oscillation
 SUSTAINED_CHECKS = 2      # scale up only after N consecutive breaches
 
 
-def _run(cmd: list[str]) -> str:
+def _run(cmd: list[str], *, check: bool = True) -> str:
     r = subprocess.run(cmd, capture_output=True, text=True)
+    if check and r.returncode != 0:
+        print(f"  ⚠ cmd failed (code {r.returncode}): {' '.join(cmd)}")
+        if r.stderr.strip():
+            for line in r.stderr.strip().split("\n"):
+                print(f"    stderr: {line}")
     return r.stdout.strip()
 
 
 def backend_containers() -> list[str]:
-    """Return container IDs of current backend replicas."""
+    """Return container IDs of current backend replicas.
+
+    Works with both Docker Compose and Terraform-managed containers
+    (named ecommerce-backend-0, ecommerce-backend-1, ...).
+    """
     out = _run(["docker", "compose", "ps", "-q", "backend"])
+    ids = [c for c in out.split("\n") if c]
+    if ids:
+        return ids
+    # Fallback: Terraform-style naming
+    out = _run(["docker", "ps", "-q", "--filter", "name=ecommerce-backend"])
     return [c for c in out.split("\n") if c]
 
 
@@ -66,8 +80,79 @@ def current_replicas() -> int:
 
 
 def scale_to(target: int) -> None:
-    print(f"  → docker compose up --scale backend={target} -d backend")
-    _run(["docker", "compose", "up", "--scale", f"backend={target}", "-d", "backend"])
+    """Scale backend to target replicas.
+
+    Works with Docker Compose (docker compose up --scale) and Terraform
+    (creates/removes containers with docker run / docker rm).
+    """
+    current = current_replicas()
+    if current == target:
+        return
+
+    if target > current:
+        # Scale up — create new replicas
+        if _is_compose():
+            print(f"  → docker compose up --scale backend={target} -d backend")
+            _run(["docker", "compose", "up", "--scale", f"backend={target}", "-d", "backend"])
+        else:
+            _run_extra_replicas(target - current)
+    else:
+        # Scale down — remove newest replicas
+        if _is_compose():
+            print(f"  → docker compose up --scale backend={target} -d backend")
+            _run(["docker", "compose", "up", "--scale", f"backend={target}", "-d", "backend"])
+        else:
+            _remove_extra_replicas(current - target)
+
+
+def _is_compose() -> bool:
+    """Check if the running backend is managed by Docker Compose."""
+    out = _run(["docker", "compose", "ps", "-q", "backend"])
+    return bool(out.strip())
+
+
+def _run_extra_replicas(count: int) -> None:
+    """Create N extra backend containers by cloning the first replica."""
+    existing = _run(["docker", "ps", "--filter", "name=ecommerce-backend", "--format", "{{.Names}}"])
+    names = [n for n in existing.split("\n") if n]
+    if not names:
+        return
+    name = names[0]
+
+    # Get the image used by the existing container
+    image = _run(["docker", "inspect", name, "--format", "{{.Config.Image}}"])
+    indices = [int(n.rsplit("-", 1)[-1]) for n in names if "-" in n]
+    next_idx = max(indices) + 1 if indices else 1
+
+    for i in range(count):
+        new_name = f"ecommerce-backend-{next_idx + i}"
+        # Skip if name already exists (e.g. managed by Terraform)
+        existing_check = _run(["docker", "ps", "-a", "--filter", f"name=^{new_name}$", "--format", "{{.Names}}"], check=False)
+        if new_name in existing_check:
+            print(f"  ⚠ {new_name} already exists — skipping")
+            continue
+        print(f"  → docker run -d --name {new_name} (replica {next_idx + i})")
+        _run([
+            "docker", "run", "-d",
+            "--name", new_name,
+            "--network", "ecommerce-network",
+            "--network-alias", "backend",
+            "--restart", "unless-stopped",
+            "-e", "DATABASE_URL=postgresql+asyncpg://postgres:postgres@ecommerce-postgres:5432/ecommerce",
+            "-e", "SECRET_KEY=change-me-to-a-random-secret-key",
+            "-e", "ALGORITHM=HS256",
+            "-e", "ACCESS_TOKEN_EXPIRE_MINUTES=30",
+            image,
+        ])
+
+
+def _remove_extra_replicas(count: int) -> None:
+    """Remove the last N backend container replicas."""
+    existing = _run(["docker", "ps", "--filter", "name=ecommerce-backend", "--format", "{{.Names}}"])
+    names = sorted(n for n in existing.split("\n") if n)
+    for name in names[-count:]:
+        print(f"  → docker rm -f {name}")
+        _run(["docker", "rm", "-f", name])
 
 
 def main() -> None:

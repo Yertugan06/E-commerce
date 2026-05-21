@@ -11,14 +11,14 @@ from app.features.users.models import User
 
 
 PRODUCT_SEEDS = [
-    Product(name="Wireless Mouse", price=29.99, stock=50),
-    Product(name="Mechanical Keyboard", price=89.99, stock=30),
-    Product(name="USB-C Hub", price=34.99, stock=40),
-    Product(name='27" Monitor', price=299.99, stock=15),
-    Product(name="Webcam 1080p", price=59.99, stock=25),
-    Product(name="Desk Lamp", price=24.99, stock=60),
-    Product(name="Noise Canceling Headphones", price=149.99, stock=20),
-    Product(name="Laptop Stand", price=39.99, stock=35),
+    Product(name="Wireless Mouse", price=29.99, stock=100000),
+    Product(name="Mechanical Keyboard", price=89.99, stock=100000),
+    Product(name="USB-C Hub", price=34.99, stock=100000),
+    Product(name='27" Monitor', price=299.99, stock=100000),
+    Product(name="Webcam 1080p", price=59.99, stock=100000),
+    Product(name="Desk Lamp", price=24.99, stock=100000),
+    Product(name="Noise Canceling Headphones", price=149.99, stock=100000),
+    Product(name="Laptop Stand", price=39.99, stock=100000),
 ]
 
 

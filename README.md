@@ -105,7 +105,7 @@ Or if deployed via Terraform, open http://localhost:8089 directly and configure 
 cd backend && uv run python -m scripts.seed
 ```
 
-This runs automatically on deploy via `scripts/deploy.sh`.
+This runs automatically on deploy via `scripts/deploy.sh`. The backend Dockerfile also runs seed in a background loop every 5 minutes, so stock auto-restores during long load test sessions.
 
 ### Run tests
 

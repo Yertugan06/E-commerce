@@ -37,7 +37,12 @@ terraform -chdir=terraform apply -auto-approve
 
 echo "=== Running database seed (reset stock, clear stale data) ==="
 sleep 3
-docker exec "${BACKEND_CONTAINER_NAME:-ecommerce-backend}-0" python -m scripts.seed 2>/dev/null \
-  && echo "Seed OK" || echo "Seed skipped (first deploy may need manual run)"
+BACKEND_CONTAINER=$(docker ps --filter name=ecommerce-backend --format "{{.Names}}" | head -1)
+if [ -n "$BACKEND_CONTAINER" ]; then
+  docker exec "$BACKEND_CONTAINER" uv run python -m scripts.seed 2>/dev/null \
+    && echo "Seed OK" || echo "Seed skipped (check container logs)"
+else
+  echo "No backend container found — seed skipped"
+fi
 
 echo "=== Deploy complete ==="
