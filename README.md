@@ -93,13 +93,19 @@ GITHUB_REPOSITORY_OWNER=your-username bash scripts/deploy.sh
 ### Run load tests
 
 ```bash
-# With Docker (headless, 10 users for 10 minutes)
-docker compose up locust
-
-# Or with web UI: edit docker-compose.yml, remove --headless, then:
-docker compose up locust
-# Open http://localhost:8089
+# Start Locust with web UI, then open http://localhost:8089
+docker compose up -d locust
 ```
+
+Or if deployed via Terraform, open http://localhost:8089 directly and configure the test in the browser.
+
+### Reset seed data (restore stock, clear test carts/orders)
+
+```bash
+cd backend && uv run python -m scripts.seed
+```
+
+This runs automatically on deploy via `scripts/deploy.sh`.
 
 ### Run tests
 
@@ -174,15 +180,6 @@ Polls container CPU/memory every 15 seconds and calls `docker compose up --scale
 
 Range: 1–10 replicas, 60-second cooldown between actions. The nginx reverse proxy uses Docker's built-in DNS resolver, so new backend replicas are discovered without a reload.
 
-### HorizontalPodAutoscaler (K8s)
-
-The backend HPA (`k8s/backend-hpa.yaml`) scales based on:
-
-- **CPU**: 60% average utilization target
-- **Memory**: 70% average utilization target
-
-Range: 1-10 replicas.
-
 ### Prometheus Capacity Alerts
 
 Defined in `prometheus/rules/autoscaling_alerts.yml`:
@@ -196,17 +193,15 @@ Defined in `prometheus/rules/autoscaling_alerts.yml`:
 
 ## Load Testing (Locust)
 
-### Docker (headless)
+Start Locust with web UI:
 
 ```bash
-docker compose up locust
+docker compose up -d locust
 ```
 
-Runs 10 users, spawn rate 2/s, for 10 minutes against the backend through nginx.
+Then open http://localhost:8089 to configure the number of users, spawn rate, and target host. The default target is `http://ecommerce-nginx:80`.
 
-### Docker (web UI)
-
-Override the command in `docker-compose.yml` to remove `--headless`, then access `http://localhost:8089` to configure test parameters interactively.
+If deployed via Terraform, Locust is accessible at http://localhost:8089.
 
 ### Locustfile
 
@@ -214,62 +209,6 @@ Override the command in `docker-compose.yml` to remove `--headless`, then access
 
 - **AnonymousBrowser** — browses products (weight 3)
 - **AuthenticatedUser** — registers/logs in, adds items to cart, browses, checks out, views orders (weighted tasks)
-
----
-
-## Kubernetes Deployment
-
-The `k8s/` directory contains all manifests for deploying to a local minikube cluster.
-
-### Prerequisites
-
-- [minikube](https://minikube.sigs.k8s.io/docs/start/)
-- [kubectl](https://kubernetes.io/docs/tasks/tools/)
-
-### Deploy
-
-```bash
-bash scripts/deploy-k8s.sh
-```
-
-This script:
-1. Enables minikube's metrics-server (required for HPA)
-2. Builds backend and frontend images inside minikube
-3. Creates the `ecommerce` namespace and secrets
-4. Deploys PostgreSQL, waits for readiness
-5. Deploys backend with HPA
-6. Deploys nginx, frontend, monitoring stack (Prometheus, Alertmanager, Grafana), and Locust
-7. Deploys Prometheus RBAC (ServiceAccount + permissions for pod discovery)
-8. Runs Alembic migrations and seed data
-
-### Access
-
-| Service     | URL                              |
-|-------------|----------------------------------|
-| Application | `http://$(minikube ip):30080`    |
-| Grafana     | `http://$(minikube ip):33000`    |
-| Prometheus  | `http://$(minikube ip):39090`    |
-| Locust      | `http://$(minikube ip):38089`    |
-
-### K8s Manifests
-
-| File | Description |
-|------|-------------|
-| `namespace.yaml` | `ecommerce` namespace |
-| `secrets.yaml` | DB credentials, JWT secret key |
-| `postgres.yaml` | PostgreSQL stateful workload |
-| `backend.yaml` | Backend deployment + service (init container waits for Postgres) |
-| `backend-hpa.yaml` | CPU/memory-based autoscaler (1-10 replicas) |
-| `nginx.yaml` | Reverse proxy (NodePort 30080) |
-| `frontend.yaml` | Nginx-served React SPA |
-| `prometheus-config.yaml` | Prometheus config + all rule files |
-| `prometheus-rbac.yaml` | ServiceAccount, Role, RoleBinding for pod discovery |
-| `prometheus.yaml` | Prometheus deployment + PVC + NodePort |
-| `alertmanager.yaml` | Alertmanager deployment + NodePort |
-| `alert-receiver.yaml` | Webhook receiver for alert notifications |
-| `grafana.yaml` | Grafana with pre-provisioned dashboards |
-| `locust.yaml` | Locust deployment + NodePort |
-| `locust-config.yaml` | Embedded locustfile.py as ConfigMap |
 
 ---
 
@@ -356,21 +295,6 @@ This script:
 │   ├── package.json
 │   ├── vite.config.ts
 │   └── vitest.config.ts
-├── k8s/                        # Kubernetes manifests
-│   ├── backend.yaml
-│   ├── backend-hpa.yaml
-│   ├── frontend.yaml
-│   ├── nginx.yaml
-│   ├── postgres.yaml
-│   ├── prometheus.yaml
-│   ├── prometheus-config.yaml
-│   ├── alertmanager.yaml
-│   ├── alert-receiver.yaml
-│   ├── grafana.yaml
-│   ├── locust.yaml
-│   ├── locust-config.yaml
-│   ├── namespace.yaml
-│   └── secrets.yaml
 ├── prometheus/
 │   ├── prometheus.yml           # Scrape config
 │   ├── alertmanager.yml         # Alert routing
@@ -391,8 +315,7 @@ This script:
 │   ├── nginx.conf               # Reverse proxy config
 │   └── Dockerfile
 ├── scripts/
-│   ├── deploy.sh                # Terraform-based deploy
-│   └── deploy-k8s.sh            # Minikube deploy
+│   └── deploy.sh                # Terraform-based deploy
 ├── terraform/                   # Infrastructure as Code (Docker provider)
 ├── docs/
 │   ├── SLOs.md                  # Full SLO definitions

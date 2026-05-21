@@ -103,9 +103,25 @@ class AuthenticatedUser(HttpUser):
     def view_orders(self):
         self.client.get("/orders", headers=self.headers, name="GET /orders")
 
-    @task(2)
-    def checkout(self):
-        self.client.post("/checkout", headers=self.headers, name="POST /checkout")
+    @task(3)
+    def add_item_and_checkout(self):
+        """Add a random product to cart and checkout."""
+        resp = self.client.get("/products", headers=self.headers, name="GET /products")
+        if not resp.ok:
+            return
+        products = resp.json()
+        if not products:
+            return
+        p = random.choice(products)
+        self.client.post(
+            "/cart/items",
+            json={"product_id": p["id"], "quantity": 1},
+            headers=self.headers,
+            name="POST /cart/items",
+        )
+        self.client.post(
+            "/checkout", headers=self.headers, name="POST /checkout"
+        )
 
     @task(1)
     def view_order_detail(self):
@@ -118,22 +134,4 @@ class AuthenticatedUser(HttpUser):
                     f"/orders/{order_id}",
                     headers=self.headers,
                     name="GET /orders/{id}",
-                )
-
-    @task(1)
-    def add_item_and_checkout(self):
-        """Add a random product and checkout."""
-        resp = self.client.get("/products", headers=self.headers, name="GET /products")
-        if resp.ok:
-            products = resp.json()
-            if products:
-                p = random.choice(products)
-                self.client.post(
-                    "/cart/items",
-                    json={"product_id": p["id"], "quantity": 1},
-                    headers=self.headers,
-                    name="POST /cart/items",
-                )
-                self.client.post(
-                    "/checkout", headers=self.headers, name="POST /checkout"
                 )

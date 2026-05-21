@@ -238,9 +238,9 @@ variable "locust_web_host" {
 }
 
 variable "locust_headless" {
-  description = "Run Locust in headless mode (no web UI)"
+  description = "Run Locust"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "locust_users" {

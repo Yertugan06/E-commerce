@@ -10,11 +10,35 @@ from app.features.users.domain import UserRole
 from app.features.users.models import User
 
 
+PRODUCT_SEEDS = [
+    Product(name="Wireless Mouse", price=29.99, stock=50),
+    Product(name="Mechanical Keyboard", price=89.99, stock=30),
+    Product(name="USB-C Hub", price=34.99, stock=40),
+    Product(name='27" Monitor', price=299.99, stock=15),
+    Product(name="Webcam 1080p", price=59.99, stock=25),
+    Product(name="Desk Lamp", price=24.99, stock=60),
+    Product(name="Noise Canceling Headphones", price=149.99, stock=20),
+    Product(name="Laptop Stand", price=39.99, stock=35),
+]
+
+
 async def seed():
     async with AsyncSession(engine) as db:
         existing = await db.execute(select(User).where(User.email == "admin@example.com"))
         if existing.scalar_one_or_none() is not None:
-            print("Seed data already exists, skipping.")
+            # Reset stock and clear stale data so load tests work on re-run.
+            for p in PRODUCT_SEEDS:
+                await db.execute(
+                    Product.__table__.update()
+                    .where(Product.name == p.name)
+                    .values(stock=p.stock)
+                )
+            await db.execute(CartItem.__table__.delete())
+            await db.execute(Cart.__table__.delete())
+            await db.execute(OrderItem.__table__.delete())
+            await db.execute(Order.__table__.delete())
+            await db.commit()
+            print("Seed data refreshed: stock reset, carts and orders cleared.")
             return
 
         admin = User(
@@ -37,16 +61,7 @@ async def seed():
         await db.refresh(alice)
         await db.refresh(bob)
 
-        products = [
-            Product(name="Wireless Mouse", price=29.99, stock=50),
-            Product(name="Mechanical Keyboard", price=89.99, stock=30),
-            Product(name="USB-C Hub", price=34.99, stock=40),
-            Product(name="27\" Monitor", price=299.99, stock=15),
-            Product(name="Webcam 1080p", price=59.99, stock=25),
-            Product(name="Desk Lamp", price=24.99, stock=60),
-            Product(name="Noise Canceling Headphones", price=149.99, stock=20),
-            Product(name="Laptop Stand", price=39.99, stock=35),
-        ]
+        products = list(PRODUCT_SEEDS)
         db.add_all(products)
         await db.flush()
         for p in products:

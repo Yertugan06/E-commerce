@@ -35,4 +35,9 @@ echo "=== Applying Terraform ==="
 terraform -chdir=terraform init -reconfigure
 terraform -chdir=terraform apply -auto-approve
 
+echo "=== Running database seed (reset stock, clear stale data) ==="
+sleep 3
+docker exec "${BACKEND_CONTAINER_NAME:-ecommerce-backend}-0" python -m scripts.seed 2>/dev/null \
+  && echo "Seed OK" || echo "Seed skipped (first deploy may need manual run)"
+
 echo "=== Deploy complete ==="

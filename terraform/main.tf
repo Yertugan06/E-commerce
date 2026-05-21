@@ -128,7 +128,8 @@ resource "docker_container" "nginx" {
   restart = "unless-stopped"
 
   networks_advanced {
-    name = docker_network.this.name
+    name     = docker_network.this.name
+    aliases  = ["nginx"]
   }
 
   ports {
@@ -184,7 +185,8 @@ resource "docker_container" "prometheus" {
   restart = "unless-stopped"
 
   networks_advanced {
-    name = docker_network.this.name
+    name     = docker_network.this.name
+    aliases  = ["prometheus"]
   }
 
   ports {
@@ -267,7 +269,8 @@ resource "docker_container" "alert_receiver" {
   restart = "unless-stopped"
 
   networks_advanced {
-    name = docker_network.this.name
+    name     = docker_network.this.name
+    aliases  = ["alert-receiver"]
   }
 
   volumes {
@@ -291,7 +294,8 @@ resource "docker_container" "alertmanager" {
   restart = "unless-stopped"
 
   networks_advanced {
-    name = docker_network.this.name
+    name     = docker_network.this.name
+    aliases  = ["alertmanager"]
   }
 
   ports {
@@ -338,7 +342,7 @@ resource "docker_container" "locust" {
   command = compact([
     "-f",
     "/mnt/locust/locustfile.py",
-    "--host=http://nginx:80",
+    "--host=http://ecommerce-nginx:80",
     "--web-host=${var.locust_web_host}",
     "--web-port=8089",
     var.locust_headless ? "--headless" : "",

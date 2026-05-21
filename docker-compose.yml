@@ -101,7 +101,7 @@ services:
     command:
       - "-f"
       - "/mnt/locust/locustfile.py"
-      - "--host=http://nginx:80"
+      - "--host=http://ecommerce-nginx:80"
       - "--web-host=0.0.0.0"
       - "--web-port=8089"
       #- "--headless"
