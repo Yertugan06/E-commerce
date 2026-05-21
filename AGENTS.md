@@ -37,12 +37,6 @@ We use specific tools and environment isolation. Always default to these command
   1. Sync state with reality: `terraform -chdir=terraform apply -refresh-only`
   2. Re-create drifted resources: `terraform -chdir=terraform taint <resource>` then `terraform -chdir=terraform apply`
   3. Import orphaned containers: `terraform -chdir=terraform import docker_container.<name> <container_id>` 
-- **Kubernetes (auto-scaling):** Deploy the full stack to minikube with auto-scaling via HPA:
-  - Prerequisites: `minikube start`
-  - Deploy: `scripts/deploy-k8s.sh`
-  - View HPA: `kubectl get hpa -n ecommerce backend`
-  - Access app: `minikube ip:30080`
-  - Scale test: `kubectl run -it --rm load-test --image=busybox -- sh -c "while true; do wget -q -O- http://nginx:80/health; done"`
 
 ## 4. Deep-Dive Documentation Pointers (Progressive Disclosure)
 Do not guess schema layouts or complex validation rules. Read these specific files *only* if your current task explicitly requires modifying these subsystems:

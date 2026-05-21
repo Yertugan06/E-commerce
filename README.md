@@ -1,6 +1,6 @@
 # E-Commerce MVP
 
-A lightweight, high-performance e-commerce platform built with FastAPI + PostgreSQL (backend) and React + Vite + TailwindCSS (frontend), with full observability (Prometheus/Grafana/Alertmanager), auto-scaling, and Kubernetes deployment support.
+A lightweight, high-performance e-commerce platform built with FastAPI + PostgreSQL (backend) and React + Vite + TailwindCSS (frontend), with full observability (Prometheus/Grafana/Alertmanager) and auto-scaling.
 
 ## Architecture
 
@@ -78,23 +78,6 @@ Access:
 
 Stop with `Ctrl+C` or `docker compose down`.
 
-### Run in Kubernetes (minikube)
-
-```bash
-# Start minikube
-minikube start
-
-# Deploy everything
-bash scripts/deploy-k8s.sh
-
-# Check status
-kubectl get pods -n ecommerce
-kubectl get hpa -n ecommerce
-
-# Access
-minikube service list -n ecommerce
-```
-
 ### Run CI/CD (requires self-hosted runner)
 
 The CI pipeline runs automatically on push/PR to `main`. To set up the self-hosted runner for deploy:
@@ -104,19 +87,8 @@ The CI pipeline runs automatically on push/PR to `main`. To set up the self-host
 Manual deploy from your machine:
 
 ```bash
-export GITHUB_REPOSITORY_OWNER=''; export GITHUB_REPOSITORY=''; bash scripts/deploy.sh
+GITHUB_REPOSITORY_OWNER=your-username bash scripts/deploy.sh
 ```
-
- To deploy to K8s now:
-
-  # Start minikube
-  minikube start
-
-  # Deploy everything
-  bash scripts/deploy-k8s.sh
-
-  # Check HPA
-  kubectl get hpa -n ecommerce
 
 ### Run load tests
 
@@ -185,6 +157,23 @@ Full SLO definitions: [docs/SLOs.md](docs/SLOs.md)
 
 ## Auto-Scaling
 
+### Docker Compose Auto-Scaler
+
+Run alongside `docker compose up` in a separate terminal:
+
+```bash
+python scripts/autoscale.sh
+```
+
+Polls container CPU/memory every 15 seconds and calls `docker compose up --scale backend=N` automatically. Thresholds:
+
+| Metric | Scale Up | Scale Down |
+|--------|----------|------------|
+| CPU | > 60% | < 20% |
+| Memory (RSS) | > 500 MB | < 200 MB |
+
+Range: 1–10 replicas, 60-second cooldown between actions. The nginx reverse proxy uses Docker's built-in DNS resolver, so new backend replicas are discovered without a reload.
+
 ### HorizontalPodAutoscaler (K8s)
 
 The backend HPA (`k8s/backend-hpa.yaml`) scales based on:
@@ -240,7 +229,7 @@ The `k8s/` directory contains all manifests for deploying to a local minikube cl
 ### Deploy
 
 ```bash
-./scripts/deploy-k8s.sh
+bash scripts/deploy-k8s.sh
 ```
 
 This script:
